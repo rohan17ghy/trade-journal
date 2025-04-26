@@ -10,7 +10,7 @@ export type TrackingEntryWithRule = TrackingEntry & {
     rule: Rule;
 };
 
-export type StatusType = "success" | "failure" | "not_applicable";
+export type StatusType = "success" | "failure";
 
 export interface ActionResult<T = any> {
     success: boolean;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { getRulesAction } from "../rules/actions";
 import { getTrackingEntriesForDateAction } from "./actions";
-import { DailyTrackingForm } from "./daily-tracking-form";
+import { StepByStepTrackingForm } from "./step-by-step-tracking-form";
 import { formatDate } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,12 @@ export default function TrackingPage() {
     const [entries, setEntries] = useState<TrackingEntryWithRule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // Function to refresh data
+    const refreshData = () => {
+        setRefreshTrigger((prev) => prev + 1);
+    };
 
     // Load rules and tracking entries
     useEffect(() => {
@@ -58,7 +64,7 @@ export default function TrackingPage() {
         }
 
         loadData();
-    }, [formattedDate]);
+    }, [formattedDate, refreshTrigger]); // Add refreshTrigger to dependencies
 
     // Update the formatted date when the date changes
     useEffect(() => {
@@ -98,10 +104,11 @@ export default function TrackingPage() {
                 {isLoading ? (
                     <div className="text-center p-8">Loading...</div>
                 ) : (
-                    <DailyTrackingForm
+                    <StepByStepTrackingForm
                         rules={rules}
                         entries={entries}
                         date={formattedDate}
+                        onEntryAdded={refreshData}
                     />
                 )}
             </div>

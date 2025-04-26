@@ -8,7 +8,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, MinusCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import type { Rule, TrackingEntryWithRule } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -27,47 +27,37 @@ export default async function DashboardPage() {
     const ruleStats = rules.map((rule) => {
         const ruleEntries = entries.filter((entry) => entry.ruleId === rule.id);
 
-        // Filter out not_applicable entries for rate calculations
-        const applicableEntries = ruleEntries.filter(
-            (e) => e.status !== "not_applicable"
-        );
-        const totalApplicable = applicableEntries.length;
-        const successfulEntries = applicableEntries.filter(
+        // Only count success and failure entries
+        const totalEntries = ruleEntries.length;
+        const successfulEntries = ruleEntries.filter(
             (e) => e.status === "success"
         ).length;
-        const failedEntries = applicableEntries.filter(
+        const failedEntries = ruleEntries.filter(
             (e) => e.status === "failure"
-        ).length;
-        const notApplicableCount = ruleEntries.filter(
-            (e) => e.status === "not_applicable"
         ).length;
 
         const successRate =
-            totalApplicable > 0
-                ? Math.round((successfulEntries / totalApplicable) * 100)
+            totalEntries > 0
+                ? Math.round((successfulEntries / totalEntries) * 100)
                 : 0;
 
         return {
             rule,
-            totalEntries: ruleEntries.length,
-            applicableEntries: totalApplicable,
+            totalEntries,
             successfulEntries,
             failedEntries,
-            notApplicableCount,
             successRate,
         };
     });
 
     // Calculate overall stats
-    const applicableEntries = entries.filter(
-        (e) => e.status !== "not_applicable"
-    );
-    const successfulEntries = applicableEntries.filter(
+    const totalEntries = entries.length;
+    const successfulEntries = entries.filter(
         (e) => e.status === "success"
     ).length;
     const overallSuccessRate =
-        applicableEntries.length > 0
-            ? Math.round((successfulEntries / applicableEntries.length) * 100)
+        totalEntries > 0
+            ? Math.round((successfulEntries / totalEntries) * 100)
             : 0;
 
     return (
@@ -119,9 +109,6 @@ export default async function DashboardPage() {
                             <div className="text-2xl font-bold">
                                 {overallSuccessRate}%
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                (excluding N/A entries)
-                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -144,7 +131,6 @@ export default async function DashboardPage() {
                                     totalEntries,
                                     successfulEntries,
                                     failedEntries,
-                                    notApplicableCount,
                                     successRate,
                                 }) => (
                                     <Card key={rule.id}>
@@ -174,9 +160,6 @@ export default async function DashboardPage() {
                                                     <p className="text-xl font-bold">
                                                         {successRate}%
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        (excluding N/A)
-                                                    </p>
                                                 </div>
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">
@@ -203,14 +186,6 @@ export default async function DashboardPage() {
                                                             <XCircle className="h-4 w-4 text-red-500 mr-1" />
                                                             <span className="text-sm">
                                                                 {failedEntries}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center">
-                                                            <MinusCircle className="h-4 w-4 text-muted-foreground mr-1" />
-                                                            <span className="text-sm">
-                                                                {
-                                                                    notApplicableCount
-                                                                }
                                                             </span>
                                                         </div>
                                                     </div>

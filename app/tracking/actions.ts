@@ -15,38 +15,16 @@ export async function addTrackingEntryAction(data: {
     notes: string;
 }): Promise<ActionResult<TrackingEntryWithRule>> {
     try {
-        // Check if an entry already exists for this rule and date
-        const existingEntry = await prisma.trackingEntry.findFirst({
-            where: {
+        // Always create a new entry instead of updating existing ones
+        const entry = await prisma.trackingEntry.create({
+            data: {
                 date: data.date,
                 ruleId: data.ruleId,
+                status: data.status,
+                notes: data.notes,
             },
+            include: { rule: true },
         });
-
-        let entry;
-
-        if (existingEntry) {
-            // Update existing entry
-            entry = await prisma.trackingEntry.update({
-                where: { id: existingEntry.id },
-                data: {
-                    status: data.status,
-                    notes: data.notes,
-                },
-                include: { rule: true },
-            });
-        } else {
-            // Create new entry
-            entry = await prisma.trackingEntry.create({
-                data: {
-                    date: data.date,
-                    ruleId: data.ruleId,
-                    status: data.status,
-                    notes: data.notes,
-                },
-                include: { rule: true },
-            });
-        }
 
         revalidatePath("/tracking");
         revalidatePath("/dashboard");
@@ -64,6 +42,7 @@ export async function getTrackingEntriesForDateAction(
         const entries = await prisma.trackingEntry.findMany({
             where: { date },
             include: { rule: true },
+            orderBy: { createdAt: "desc" }, // Show newest entries first
         });
         return { success: true, data: entries };
     } catch (error) {
