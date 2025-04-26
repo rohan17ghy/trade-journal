@@ -3,14 +3,15 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/db";
 import type { ActionResult, Rule } from "@/lib/types";
+import { RuleFormFields } from "./add-rule-form";
 
 export async function addRuleAction(
-    formData: FormData
+    formData: RuleFormFields
 ): Promise<ActionResult<Rule>> {
     try {
-        const name = formData.get("name") as string;
-        const description = formData.get("description") as string;
-        const category = formData.get("category") as string;
+        const name = formData.name;
+        const description = formData.description;
+        const category = formData.category;
 
         if (!name || !category) {
             throw new Error("Name and category are required");

@@ -15,76 +15,116 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { addRuleAction } from "./actions";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod";
+import { Description } from "@radix-ui/react-toast";
+import { Resolver } from "dns";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Rule } from "postcss";
+import { ActionResult } from "@/lib/types";
+
+const RuleCategoryEnum = z.enum([
+    "Entry",
+    "Exit",
+    "Risk Management",
+    "Psychology",
+    "Other",
+]);
+
+const RulesSchema = z.object({
+    name: z.string().min(1, "Rule Name cannot be empty"),
+    category: RuleCategoryEnum,
+    description: z.string().min(1, "Description cannot be empty"),
+});
+
+export type RuleFormFields = z.infer<typeof RulesSchema>;
 
 export function AddRuleForm() {
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setIsSubmitting(true);
-        setError(null);
+    const {
+        register,
+        handleSubmit,
+        setError,
+        reset,
+        control,
+        formState: { errors, isSubmitting },
+    } = useForm<RuleFormFields>({ resolver: zodResolver(RulesSchema) });
 
-        const formData = new FormData(event.currentTarget);
-        const result = await addRuleAction(formData);
-
+    const onSubmit: SubmitHandler<RuleFormFields> = async (data) => {
+        const result = await addRuleAction(data);
         if (result.success) {
-            // Reset form
-            event.currentTarget.reset();
-            router.refresh();
+            reset();
+            //TODO: Here need to navigate to some other page
         } else {
-            setError(result.error || "Failed to add rule");
+            setError("root", { message: result.error });
         }
-
-        setIsSubmitting(false);
-    }
+    };
 
     return (
         <div className="border rounded-lg p-4 border-border">
             <h2 className="text-lg font-medium mb-4">Add New Rule</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid gap-2">
                     <Label htmlFor="name">Rule Name</Label>
                     <Input
-                        id="name"
-                        name="name"
+                        {...register("name")}
                         placeholder="Enter rule name"
-                        required
                     />
                 </div>
+                {errors.name && (
+                    <span className="text-red-500">{errors.name.message}</span>
+                )}
 
                 <div className="grid gap-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select name="category" required>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Entry">Entry</SelectItem>
-                            <SelectItem value="Exit">Exit</SelectItem>
-                            <SelectItem value="Risk Management">
-                                Risk Management
-                            </SelectItem>
-                            <SelectItem value="Psychology">
-                                Psychology
-                            </SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Controller
+                        name="category"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {RuleCategoryEnum.options.map(
+                                        (value, key) => (
+                                            <SelectItem value={value} key={key}>
+                                                {value}
+                                            </SelectItem>
+                                        )
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    ></Controller>
                 </div>
+                {errors.category && (
+                    <span className="text-red-500">
+                        {errors.category.message}
+                    </span>
+                )}
 
                 <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea
-                        id="description"
-                        name="description"
-                        placeholder="Describe your trading rule"
-                        rows={3}
-                    />
+                    <Textarea {...register("description")} rows={3} />
                 </div>
+                {errors.description && (
+                    <span className="text-red-500">
+                        {errors.description.message}
+                    </span>
+                )}
 
-                {error && <div className="text-red-500 text-sm">{error}</div>}
+                {/* Root error messages which are set for generic error messages which are not tied to any field
+                 Usefull mostly when there are error from the API*/}
+                {errors.root && (
+                    <div className="text-red-500 text-sm">
+                        {errors.root.message}
+                    </div>
+                )}
 
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? "Adding..." : "Add Rule"}
