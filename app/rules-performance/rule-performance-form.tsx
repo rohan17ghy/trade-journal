@@ -22,24 +22,28 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { addTrackingEntryAction } from "./actions";
+import { addRulePerformanceEntryAction } from "./actions";
 import { CheckCircle, XCircle, ArrowLeft, Check, Clock } from "lucide-react";
-import type { Rule, StatusType, TrackingEntryWithRule } from "@/lib/types";
+import type {
+    Rule,
+    StatusType,
+    RulePerformanceEntryWithRule,
+} from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 
-interface StepByStepTrackingFormProps {
+interface RulePerformanceFormProps {
     rules: Rule[];
-    entries: TrackingEntryWithRule[];
+    entries: RulePerformanceEntryWithRule[];
     date: string;
     onEntryAdded: () => void;
 }
 
-export function StepByStepTrackingForm({
+export function RulePerformanceForm({
     rules,
     entries,
     date,
     onEntryAdded,
-}: StepByStepTrackingFormProps) {
+}: RulePerformanceFormProps) {
     const router = useRouter();
     const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
     const [ruleStatus, setRuleStatus] = useState<Record<string, StatusType>>(
@@ -61,7 +65,7 @@ export function StepByStepTrackingForm({
         }
         acc[entry.ruleId].push(entry);
         return acc;
-    }, {} as Record<string, TrackingEntryWithRule[]>);
+    }, {} as Record<string, RulePerformanceEntryWithRule[]>);
 
     // Format relative time - fixed to handle different date formats
     const getRelativeTime = (dateStr: Date | string) => {
@@ -88,7 +92,7 @@ export function StepByStepTrackingForm({
         setError(null);
 
         try {
-            const result = await addTrackingEntryAction({
+            const result = await addRulePerformanceEntryAction({
                 date,
                 ruleId: selectedRuleId,
                 status: ruleStatus[selectedRuleId],
@@ -97,7 +101,7 @@ export function StepByStepTrackingForm({
 
             if (!result.success) {
                 throw new Error(
-                    result.error || "Failed to save tracking entry"
+                    result.error || "Failed to save rule performance entry"
                 );
             }
 
@@ -128,7 +132,7 @@ export function StepByStepTrackingForm({
         return (
             <div className="text-center p-8 border rounded-lg border-border">
                 <p className="text-muted-foreground">
-                    No rules added yet. Add rules first to track their
+                    No rules added yet. Add rules first to evaluate their
                     performance.
                 </p>
                 <Button className="mt-4" onClick={() => router.push("/rules")}>
@@ -143,9 +147,10 @@ export function StepByStepTrackingForm({
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Select a Rule to Track</CardTitle>
+                    <CardTitle>Select a Rule to Evaluate</CardTitle>
                     <CardDescription>
-                        Choose a trading rule to evaluate for {date}
+                        Choose a trading rule to assess its performance for{" "}
+                        {date}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -168,7 +173,7 @@ export function StepByStepTrackingForm({
                         {entries.length > 0 && (
                             <div className="mt-6">
                                 <h3 className="text-sm font-medium mb-3">
-                                    Today's Entries ({entries.length})
+                                    Today's Rule Assessments ({entries.length})
                                 </h3>
                                 <div className="space-y-4">
                                     {Object.entries(entriesByRule).map(
@@ -205,8 +210,8 @@ export function StepByStepTrackingForm({
                                                             {ruleEntries.length}{" "}
                                                             {ruleEntries.length ===
                                                             1
-                                                                ? "entry"
-                                                                : "entries"}
+                                                                ? "assessment"
+                                                                : "assessments"}
                                                         </Badge>
                                                     </h4>
                                                     <div className="space-y-3">
@@ -304,7 +309,7 @@ export function StepByStepTrackingForm({
 
                     <div>
                         <Label className="text-sm mb-2 block">
-                            How did this rule perform?
+                            How did this rule perform in today's trading?
                         </Label>
                         <RadioGroup
                             value={ruleStatus[selectedRuleId] || ""}
@@ -354,7 +359,7 @@ export function StepByStepTrackingForm({
                         </Label>
                         <Textarea
                             id={`notes-${selectedRuleId}`}
-                            placeholder="Add notes about this rule's performance"
+                            placeholder="Add notes about this rule's effectiveness today"
                             value={notes[selectedRuleId] || ""}
                             onChange={(e) => {
                                 setNotes({
@@ -384,7 +389,7 @@ export function StepByStepTrackingForm({
                     onClick={handleSubmitRule}
                     disabled={isSubmitting || !ruleStatus[selectedRuleId]}
                 >
-                    {isSubmitting ? "Saving..." : "Save Entry"}
+                    {isSubmitting ? "Saving..." : "Save Assessment"}
                     {!isSubmitting && <Check className="ml-2 h-4 w-4" />}
                 </Button>
             </CardFooter>

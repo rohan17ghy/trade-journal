@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { getRulesAction } from "../rules/actions";
-import { getTrackingEntriesForDateAction } from "./actions";
-import { StepByStepTrackingForm } from "./step-by-step-tracking-form";
+import { getRulePerformanceEntriesForDateAction } from "./actions";
+import { RulePerformanceForm } from "./rule-performance-form";
 import { formatDate } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Rule, TrackingEntryWithRule } from "@/lib/types";
+import type { Rule, RulePerformanceEntryWithRule } from "@/lib/types";
 
-export default function TrackingPage() {
+export default function RulesPerformancePage() {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [formattedDate, setFormattedDate] = useState<string>(
         formatDate(new Date())
     );
     const [rules, setRules] = useState<Rule[]>([]);
-    const [entries, setEntries] = useState<TrackingEntryWithRule[]>([]);
+    const [entries, setEntries] = useState<RulePerformanceEntryWithRule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -25,7 +25,7 @@ export default function TrackingPage() {
         setRefreshTrigger((prev) => prev + 1);
     };
 
-    // Load rules and tracking entries
+    // Load rules and performance entries
     useEffect(() => {
         async function loadData() {
             setIsLoading(true);
@@ -41,15 +41,16 @@ export default function TrackingPage() {
                 }
                 setRules(rulesResult.data || []);
 
-                // Load tracking entries for the selected date
+                // Load performance entries for the selected date
                 if (formattedDate) {
-                    const entriesResult = await getTrackingEntriesForDateAction(
-                        formattedDate
-                    );
+                    const entriesResult =
+                        await getRulePerformanceEntriesForDateAction(
+                            formattedDate
+                        );
                     if (!entriesResult.success) {
                         throw new Error(
                             entriesResult.error ||
-                                "Failed to load tracking entries"
+                                "Failed to load rule performance data"
                         );
                     }
                     setEntries(entriesResult.data || []);
@@ -79,10 +80,10 @@ export default function TrackingPage() {
             <div className="flex flex-col gap-8">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">
-                        Daily Tracking
+                        Rules Performance
                     </h1>
                     <p className="text-muted-foreground">
-                        Track how your trading rules performed
+                        Evaluate how your trading rules performed in the market
                     </p>
                 </div>
 
@@ -104,7 +105,7 @@ export default function TrackingPage() {
                 {isLoading ? (
                     <div className="text-center p-8">Loading...</div>
                 ) : (
-                    <StepByStepTrackingForm
+                    <RulePerformanceForm
                         rules={rules}
                         entries={entries}
                         date={formattedDate}

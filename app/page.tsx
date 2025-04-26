@@ -22,8 +22,8 @@ export default function Home() {
                             </Link>
                         </Button>
                         <Button asChild variant="outline">
-                            <Link href="/tracking">
-                                Daily Tracking{" "}
+                            <Link href="/rules-performance">
+                                Rules Performance{" "}
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>

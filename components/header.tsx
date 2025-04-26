@@ -24,10 +24,10 @@ export function Header() {
                             Rules
                         </Link>
                         <Link
-                            href="/tracking"
+                            href="/rules-performance"
                             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            Tracking
+                            Rules Performance
                         </Link>
                     </nav>
                 </div>

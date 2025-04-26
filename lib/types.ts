@@ -1,16 +1,17 @@
-import type { Rule, TrackingEntry } from "@prisma/client";
+import type { Rule, RulePerformanceEntry } from "@prisma/client";
 
-export type { Rule, TrackingEntry };
+export type { Rule, RulePerformanceEntry };
 
-export type RuleWithEntries = Rule & {
-    entries: TrackingEntry[];
+export type RuleWithPerformances = Rule & {
+    performances: RulePerformanceEntry[];
 };
 
-export type TrackingEntryWithRule = TrackingEntry & {
+export type RulePerformanceEntryWithRule = RulePerformanceEntry & {
     rule: Rule;
 };
 
-export type StatusType = "success" | "failure";
+// Updated to only include success and failure
+export type StatusType = "success" | "failure" | "not_applicable";
 
 export interface ActionResult<T = any> {
     success: boolean;
@@ -18,10 +19,12 @@ export interface ActionResult<T = any> {
     error?: string;
 }
 
-export interface DailyTracking {
+export interface DailyPerformance {
     id: string;
     date: string;
-    entries: TrackingEntry[];
+    entries: RulePerformanceEntry[];
     notes: string;
     createdAt: string;
 }
+
+// Removed TrackingEntry, DailyTracking, and TrackingEntryWithRule

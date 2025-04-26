@@ -1,5 +1,5 @@
 import { getRulesAction } from "../rules/actions";
-import { getAllTrackingEntriesAction } from "../tracking/actions";
+import { getAllRulePerformanceEntriesAction } from "../rules-performance/actions";
 import {
     Card,
     CardContent,
@@ -9,16 +9,16 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle } from "lucide-react";
-import type { Rule, TrackingEntryWithRule } from "@/lib/types";
+import type { Rule, RulePerformanceEntryWithRule } from "@/lib/types";
 
 export default async function DashboardPage() {
     const rulesResult = await getRulesAction();
-    const entriesResult = await getAllTrackingEntriesAction();
+    const entriesResult = await getAllRulePerformanceEntriesAction();
 
     const rules = (rulesResult.success ? rulesResult.data : []) as Rule[];
     const entries = (
         entriesResult.success ? entriesResult.data : []
-    ) as TrackingEntryWithRule[];
+    ) as RulePerformanceEntryWithRule[];
 
     // Get unique dates
     const uniqueDates = [...new Set(entries.map((entry) => entry.date))].length;
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Days Tracked
+                                Days Evaluated
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -114,13 +114,15 @@ export default async function DashboardPage() {
                 </div>
 
                 <div>
-                    <h2 className="text-xl font-bold mb-4">Rule Performance</h2>
+                    <h2 className="text-xl font-bold mb-4">
+                        Rules Performance
+                    </h2>
 
                     {ruleStats.length === 0 ? (
                         <div className="text-center p-8 border rounded-lg border-border">
                             <p className="text-muted-foreground">
-                                No data available yet. Start tracking your
-                                rules.
+                                No performance data available yet. Start
+                                evaluating your rules.
                             </p>
                         </div>
                     ) : (
@@ -163,7 +165,7 @@ export default async function DashboardPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Times Tracked
+                                                        Times Evaluated
                                                     </p>
                                                     <p className="text-xl font-bold">
                                                         {totalEntries}
