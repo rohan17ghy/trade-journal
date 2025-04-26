@@ -1,4 +1,5 @@
-import { getRules, getDailyTrackings } from "@/lib/data";
+import { getRulesAction } from "../rules/actions";
+import { getAllTrackingEntriesAction } from "../tracking/actions";
 import {
     Card,
     CardContent,
@@ -8,19 +9,26 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, MinusCircle } from "lucide-react";
+import type { Rule, TrackingEntryWithRule } from "@/lib/types";
 
-export default function DashboardPage() {
-    const rules = getRules();
-    const trackings = getDailyTrackings();
+export default async function DashboardPage() {
+    const rulesResult = await getRulesAction();
+    const entriesResult = await getAllTrackingEntriesAction();
+
+    const rules = (rulesResult.success ? rulesResult.data : []) as Rule[];
+    const entries = (
+        entriesResult.success ? entriesResult.data : []
+    ) as TrackingEntryWithRule[];
+
+    // Get unique dates
+    const uniqueDates = [...new Set(entries.map((entry) => entry.date))].length;
 
     // Calculate success rate for each rule
     const ruleStats = rules.map((rule) => {
-        const entries = trackings.flatMap((t) =>
-            t.entries.filter((e) => e.ruleId === rule.id)
-        );
+        const ruleEntries = entries.filter((entry) => entry.ruleId === rule.id);
 
         // Filter out not_applicable entries for rate calculations
-        const applicableEntries = entries.filter(
+        const applicableEntries = ruleEntries.filter(
             (e) => e.status !== "not_applicable"
         );
         const totalApplicable = applicableEntries.length;
@@ -30,7 +38,7 @@ export default function DashboardPage() {
         const failedEntries = applicableEntries.filter(
             (e) => e.status === "failure"
         ).length;
-        const notApplicableCount = entries.filter(
+        const notApplicableCount = ruleEntries.filter(
             (e) => e.status === "not_applicable"
         ).length;
 
@@ -41,7 +49,7 @@ export default function DashboardPage() {
 
         return {
             rule,
-            totalEntries: entries.length,
+            totalEntries: ruleEntries.length,
             applicableEntries: totalApplicable,
             successfulEntries,
             failedEntries,
@@ -51,8 +59,7 @@ export default function DashboardPage() {
     });
 
     // Calculate overall stats
-    const allEntries = trackings.flatMap((t) => t.entries);
-    const applicableEntries = allEntries.filter(
+    const applicableEntries = entries.filter(
         (e) => e.status !== "not_applicable"
     );
     const successfulEntries = applicableEntries.filter(
@@ -97,7 +104,7 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {trackings.length}
+                                {uniqueDates}
                             </div>
                         </CardContent>
                     </Card>

@@ -1,9 +1,13 @@
-import { getRules } from "@/lib/data";
+import { getRulesAction } from "./actions";
 import { AddRuleForm } from "./add-rule-form";
 import { RulesList } from "./rules-list";
+import type { Rule } from "@/lib/types";
 
-export default function RulesPage() {
-    const rules = getRules();
+export default async function RulesPage() {
+    const { success, data = [], error } = await getRulesAction();
+
+    // Type assertion to ensure data is treated as Rule[]
+    const rules = (data || []) as Rule[];
 
     return (
         <div className="w-full max-w-4xl mx-auto py-8 px-4">
@@ -18,6 +22,12 @@ export default function RulesPage() {
                 </div>
 
                 <AddRuleForm />
+
+                {!success && (
+                    <div className="text-red-500">
+                        {error || "Failed to load rules"}
+                    </div>
+                )}
 
                 <RulesList initialRules={rules} />
             </div>
