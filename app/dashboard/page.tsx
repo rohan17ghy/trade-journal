@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getRulesAction } from "../rules/actions";
 import { getAllRulePerformanceEntriesAction } from "../rules-performance/actions";
 import {
@@ -8,7 +9,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import type { Rule, RulePerformanceEntryWithRule } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -135,75 +136,84 @@ export default async function DashboardPage() {
                                     failedEntries,
                                     successRate,
                                 }) => (
-                                    <Card key={rule.id}>
-                                        <CardHeader className="pb-2">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <CardTitle className="text-base">
-                                                        {rule.name}
-                                                    </CardTitle>
-                                                    <CardDescription>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="mt-1"
-                                                        >
-                                                            {rule.category}
-                                                        </Badge>
-                                                    </CardDescription>
+                                    <Link
+                                        href={`/analytics/${rule.id}`}
+                                        key={rule.id}
+                                        className="block transition-transform hover:scale-[1.01]"
+                                    >
+                                        <Card className="hover:border-primary/50 transition-colors">
+                                            <CardHeader className="pb-2">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <CardTitle className="text-base flex items-center">
+                                                            {rule.name}
+                                                            <ArrowRight className="ml-2 h-4 w-4 text-muted-foreground" />
+                                                        </CardTitle>
+                                                        <CardDescription>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="mt-1"
+                                                            >
+                                                                {rule.category}
+                                                            </Badge>
+                                                        </CardDescription>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Success Rate
-                                                    </p>
-                                                    <p className="text-xl font-bold">
-                                                        {successRate}%
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Times Evaluated
-                                                    </p>
-                                                    <p className="text-xl font-bold">
-                                                        {totalEntries}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Breakdown
-                                                    </p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <div className="flex items-center">
-                                                            <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                                                            <span className="text-sm">
-                                                                {
-                                                                    successfulEntries
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center">
-                                                            <XCircle className="h-4 w-4 text-red-500 mr-1" />
-                                                            <span className="text-sm">
-                                                                {failedEntries}
-                                                            </span>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Success Rate
+                                                        </p>
+                                                        <p className="text-xl font-bold">
+                                                            {successRate}%
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Times Evaluated
+                                                        </p>
+                                                        <p className="text-xl font-bold">
+                                                            {totalEntries}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Breakdown
+                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="flex items-center">
+                                                                <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                                                <span className="text-sm">
+                                                                    {
+                                                                        successfulEntries
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center">
+                                                                <XCircle className="h-4 w-4 text-red-500 mr-1" />
+                                                                <span className="text-sm">
+                                                                    {
+                                                                        failedEntries
+                                                                    }
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="mt-4 w-full bg-secondary rounded-full h-2.5">
-                                                <div
-                                                    className="bg-green-600 h-2.5 rounded-full"
-                                                    style={{
-                                                        width: `${successRate}%`,
-                                                    }}
-                                                ></div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                                <div className="mt-4 w-full bg-secondary rounded-full h-2.5">
+                                                    <div
+                                                        className="bg-green-600 h-2.5 rounded-full"
+                                                        style={{
+                                                            width: `${successRate}%`,
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
                                 )
                             )}
                         </div>

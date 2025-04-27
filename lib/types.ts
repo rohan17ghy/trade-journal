@@ -26,5 +26,3 @@ export interface DailyPerformance {
     notes: string;
     createdAt: string;
 }
-
-// Removed TrackingEntry, DailyTracking, and TrackingEntryWithRule
