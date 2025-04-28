@@ -390,3 +390,48 @@ export async function getTradeJournalStatisticsAction(): Promise<
         };
     }
 }
+
+export async function getTradesByDateRangeAction(
+    startDate: string,
+    endDate: string
+): Promise<ActionResult<TradeJournalEntryWithRules[]>> {
+    try {
+        console.log(
+            `Server action called with startDate: ${startDate}, endDate: ${endDate}`
+        );
+
+        // If both dates are empty strings or undefined, return all trades
+        if (!startDate || !endDate) {
+            console.log("Fetching all trades (no date filter)");
+            const entries = await prisma.tradeJournalEntry.findMany({
+                orderBy: { date: "desc" },
+                include: {
+                    rules: true,
+                },
+            });
+            console.log(`Found ${entries.length} trades (all)`);
+            return { success: true, data: entries };
+        }
+
+        // Fetch trades within the date range
+        console.log(`Fetching trades between ${startDate} and ${endDate}`);
+        const entries = await prisma.tradeJournalEntry.findMany({
+            where: {
+                date: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+            orderBy: { date: "desc" },
+            include: {
+                rules: true,
+            },
+        });
+
+        console.log(`Found ${entries.length} trades in date range`);
+        return { success: true, data: entries };
+    } catch (error) {
+        console.error("Failed to get trades by date range:", error);
+        return { success: false, error: "Failed to get trades by date range" };
+    }
+}
