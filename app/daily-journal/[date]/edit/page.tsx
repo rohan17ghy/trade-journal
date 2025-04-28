@@ -55,6 +55,7 @@ export default async function EditDailyJournalPage({
                     <CardContent>
                         <DailyJournalForm
                             defaultValues={{
+                                id: journal.id,
                                 date: journal.date,
                                 marketOverview: journal.marketOverview || "",
                                 mood: journal.mood || "",
@@ -68,6 +69,8 @@ export default async function EditDailyJournalPage({
                                     journal.improvementAreas || "",
                                 planForTomorrow: journal.planForTomorrow || "",
                                 gratitude: journal.gratitude || "",
+                                ruleModification:
+                                    journal.ruleModification || "",
                             }}
                         />
                     </CardContent>

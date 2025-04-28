@@ -17,16 +17,22 @@ import type { Rule, RulePerformance } from "@/lib/types";
 import type { StatusType } from "@/lib/types";
 import { getRulePerformanceEntriesForDateAction } from "@/app/rules-performance/actions";
 import type { RulePerformanceEntryWithRule } from "@/lib/types";
+import { JournalTrades } from "./journal-trades";
 
 interface DailyJournalFormProps {
     defaultValues?: {
+        id?: string;
         date?: string;
         marketOverview?: string;
+        mood?: string;
+        physicalCondition?: string;
         goals?: string;
+        achievements?: string;
         challenges?: string;
         insights?: string;
         improvementAreas?: string;
         planForTomorrow?: string;
+        gratitude?: string;
         ruleModification?: string;
         rulePerformances?: RulePerformance[];
     };
@@ -223,11 +229,12 @@ export function DailyJournalForm({
             </div>
 
             <Tabs defaultValue="market" className="w-full">
-                <TabsList className="grid grid-cols-4">
+                <TabsList className="grid grid-cols-5">
                     <TabsTrigger value="market">Market</TabsTrigger>
                     <TabsTrigger value="reflection">Reflection</TabsTrigger>
                     <TabsTrigger value="planning">Planning</TabsTrigger>
                     <TabsTrigger value="rules">Rules Performance</TabsTrigger>
+                    <TabsTrigger value="trades">Trades</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="market" className="space-y-4 pt-4">
@@ -352,6 +359,12 @@ export function DailyJournalForm({
                             />
                         </div>
                     )}
+                </TabsContent>
+                <TabsContent value="trades" className="space-y-4 pt-4">
+                    <JournalTrades
+                        date={formatDate(date || new Date())}
+                        dailyJournalId={defaultValues.id}
+                    />
                 </TabsContent>
             </Tabs>
 
