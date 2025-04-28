@@ -23,13 +23,17 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { addTradeJournalEntryAction } from "../actions";
+import {
+    addTradeJournalEntryAction,
+    updateTradeJournalEntryAction,
+} from "../actions";
 import { formatDate } from "@/lib/utils";
 import type { Rule, MarketType, TradeDirection } from "@/lib/types";
 
 interface TradeJournalFormProps {
     rules: Rule[];
     defaultValues?: {
+        id?: string;
         date?: string;
         market?: string;
         symbol?: string;
@@ -48,11 +52,15 @@ interface TradeJournalFormProps {
         rating?: number;
         ruleIds?: string[];
     };
+    isEditing?: boolean;
+    tradeId?: string;
 }
 
 export function TradeJournalForm({
     rules,
     defaultValues = {},
+    isEditing = false,
+    tradeId = "",
 }: TradeJournalFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,7 +139,7 @@ export function TradeJournalForm({
 
             const formattedDate = formatDate(date);
 
-            const result = await addTradeJournalEntryAction({
+            const tradeData = {
                 date: formattedDate,
                 market,
                 symbol,
@@ -152,16 +160,36 @@ export function TradeJournalForm({
                 rating: rating || undefined,
                 ruleIds:
                     selectedRuleIds.length > 0 ? selectedRuleIds : undefined,
-            });
+            };
+
+            let result;
+
+            if (isEditing && tradeId) {
+                // Update existing trade
+                result = await updateTradeJournalEntryAction(
+                    tradeId,
+                    tradeData
+                );
+            } else {
+                // Create new trade
+                result = await addTradeJournalEntryAction(tradeData);
+            }
 
             if (!result.success) {
                 throw new Error(
-                    result.error || "Failed to add trade journal entry"
+                    result.error ||
+                        `Failed to ${
+                            isEditing ? "update" : "add"
+                        } trade journal entry`
                 );
             }
 
-            // Navigate to the journal page
-            router.push("/journal");
+            // Navigate to the journal page or the specific trade page if editing
+            if (isEditing) {
+                router.push(`/journal/${tradeId}`);
+            } else {
+                router.push("/journal");
+            }
             router.refresh();
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
@@ -535,7 +563,11 @@ export function TradeJournalForm({
 
             <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Trade"}
+                    {isSubmitting
+                        ? "Saving..."
+                        : isEditing
+                        ? "Update Trade"
+                        : "Save Trade"}
                 </Button>
             </div>
         </form>
