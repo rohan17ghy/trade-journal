@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, LineChart } from "lucide-react";
 
 export default function Home() {
     return (
@@ -11,20 +11,25 @@ export default function Home() {
                         Trade Journal
                     </h1>
                     <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                        Track your trading rules and analyze their performance
-                        over time.
+                        Track your trading rules, journal your daily progress,
+                        and analyze your performance over time.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                         <Button asChild>
-                            <Link href="/rules">
-                                Manage Rules{" "}
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                            <Link href="/daily-journal">
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Daily Journal
                             </Link>
                         </Button>
                         <Button asChild variant="outline">
-                            <Link href="/rules-performance">
-                                Rules Performance{" "}
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                            <Link href="/journal">
+                                <LineChart className="mr-2 h-4 w-4" />
+                                Trade Journal
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline">
+                            <Link href="/rules">
+                                Rules <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                     </div>

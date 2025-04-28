@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LineChartIcon as ChartLine, BookOpen } from "lucide-react";
+import { LineChartIcon as ChartLine } from "lucide-react";
 
 export function Header() {
     return (
         <header className="border-b border-border">
             <div className="container flex h-16 items-center justify-between">
-                <div className="flex items-center gap-6 mx-4">
+                <div className="flex items-center gap-6">
                     <Link href="/" className="font-semibold">
                         Trade Journal
                     </Link>
@@ -30,26 +30,14 @@ export function Header() {
                             Rules Performance
                         </Link>
                         <Link
-                            href="/daily-journal"
-                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Journal
-                        </Link>
-                        <Link
                             href="/journal"
                             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            Trades
+                            Trade Journal
                         </Link>
                     </nav>
                 </div>
-                <div className="flex items-center gap-4 mx-4">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href="/daily-journal">
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Journal
-                        </Link>
-                    </Button>
+                <div className="flex items-center gap-4">
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/dashboard">
                             <ChartLine className="h-4 w-4 mr-2" />

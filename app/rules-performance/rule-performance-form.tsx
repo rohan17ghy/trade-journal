@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { addRulePerformanceEntryAction } from "./actions";
+import {
+    addRulePerformanceEntryAction,
+    getRulePerformanceEntriesForDateAction,
+} from "./actions";
 import { CheckCircle, XCircle, ArrowLeft, Check, Clock } from "lucide-react";
 import type {
     Rule,
@@ -36,13 +39,15 @@ interface RulePerformanceFormProps {
     entries: RulePerformanceEntryWithRule[];
     date: string;
     onEntryAdded: () => void;
+    inJournalForm?: boolean;
 }
 
 export function RulePerformanceForm({
     rules,
-    entries,
+    entries: initialEntries,
     date,
     onEntryAdded,
+    inJournalForm = false,
 }: RulePerformanceFormProps) {
     const router = useRouter();
     const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
@@ -52,11 +57,34 @@ export function RulePerformanceForm({
     const [notes, setNotes] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [entries, setEntries] =
+        useState<RulePerformanceEntryWithRule[]>(initialEntries);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Find the selected rule
     const selectedRule = selectedRuleId
         ? rules.find((rule) => rule.id === selectedRuleId)
         : null;
+
+    // Refresh entries when date changes or after adding a new entry
+    const refreshEntries = async () => {
+        setIsRefreshing(true);
+        try {
+            const result = await getRulePerformanceEntriesForDateAction(date);
+            if (result.success && result.data) {
+                setEntries(result.data);
+            }
+        } catch (error) {
+            console.error("Failed to refresh entries:", error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    // Initialize entries and refresh when date changes
+    useEffect(() => {
+        refreshEntries();
+    }, [date]);
 
     // Group entries by rule for display
     const entriesByRule = entries.reduce((acc, entry) => {
@@ -92,6 +120,7 @@ export function RulePerformanceForm({
         setError(null);
 
         try {
+            // Make sure we're using the formatted date from props, not generating a new one
             const result = await addRulePerformanceEntryAction({
                 date,
                 ruleId: selectedRuleId,
@@ -115,11 +144,16 @@ export function RulePerformanceForm({
                 [selectedRuleId]: "",
             });
 
-            // Call the callback to refresh data
+            // Refresh entries after adding a new one
+            await refreshEntries();
+
+            // Call the callback to refresh data in parent component
             onEntryAdded();
 
-            // Return to rule selection page after saving
-            setSelectedRuleId(null);
+            // Return to rule selection page after saving only if not in journal form
+            if (!inJournalForm) {
+                setSelectedRuleId(null);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
         } finally {
@@ -170,7 +204,11 @@ export function RulePerformanceForm({
                             </SelectContent>
                         </Select>
 
-                        {entries.length > 0 && (
+                        {isRefreshing ? (
+                            <div className="text-center p-4">
+                                Refreshing entries...
+                            </div>
+                        ) : entries.length > 0 ? (
                             <div className="mt-6">
                                 <h3 className="text-sm font-medium mb-3">
                                     Today's Rule Assessments ({entries.length})
@@ -269,7 +307,7 @@ export function RulePerformanceForm({
                                     )}
                                 </div>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </CardContent>
             </Card>
@@ -385,13 +423,32 @@ export function RulePerformanceForm({
                 >
                     Cancel
                 </Button>
-                <Button
-                    onClick={handleSubmitRule}
-                    disabled={isSubmitting || !ruleStatus[selectedRuleId]}
-                >
-                    {isSubmitting ? "Saving..." : "Save Assessment"}
-                    {!isSubmitting && <Check className="ml-2 h-4 w-4" />}
-                </Button>
+                <div className="flex gap-2">
+                    {inJournalForm && (
+                        <Button
+                            onClick={async () => {
+                                await handleSubmitRule();
+                                // Don't reset selectedRuleId, just clear the form for the same rule
+                            }}
+                            disabled={
+                                isSubmitting || !ruleStatus[selectedRuleId]
+                            }
+                        >
+                            {isSubmitting ? "Saving..." : "Save & Add Another"}
+                        </Button>
+                    )}
+                    <Button
+                        onClick={handleSubmitRule}
+                        disabled={isSubmitting || !ruleStatus[selectedRuleId]}
+                    >
+                        {isSubmitting
+                            ? "Saving..."
+                            : inJournalForm
+                            ? "Save & Select Another Rule"
+                            : "Save Assessment"}
+                        {!isSubmitting && <Check className="ml-2 h-4 w-4" />}
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     );

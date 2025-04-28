@@ -18,6 +18,7 @@ model Rule {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   performances RulePerformanceEntry[]
+  tradeJournalEntries TradeJournalEntry[] // Relation to trade journal entries
 }
 
 model RulePerformanceEntry {
@@ -29,4 +30,59 @@ model RulePerformanceEntry {
   updatedAt DateTime @updatedAt
   rule      Rule     @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   ruleId    String
+}
+
+model TradeJournalEntry {
+  id              String   @id @default(cuid())
+  date            String
+  market          String   // e.g., "Forex", "Stocks", "Crypto"
+  symbol          String   // e.g., "EURUSD", "AAPL", "BTC/USD"
+  setup           String?  // The trading setup/pattern used
+  direction       String   // "Long" or "Short"
+  entryPrice      Float
+  exitPrice       Float?
+  stopLoss        Float?
+  takeProfit      Float?
+  positionSize    Float
+  profitLoss      Float?
+  profitLossPercentage Float?
+  fees            Float?
+  duration        String?  // e.g., "2h 15m" or calculated from entry/exit times
+  entryTime       DateTime?
+  exitTime        DateTime?
+  psychology      String?  // Notes on psychological state during the trade
+  notes           String?  // General notes about the trade
+  lessonsLearned  String?  // What was learned from this trade
+  screenshots     String[] // URLs to screenshots or images
+  rating          Int?     // Self-rating of the trade execution (1-5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  rules           Rule[]   // Rules that were applied in this trade
+  dailyJournal    DailyJournal? @relation(fields: [dailyJournalId], references: [id])
+  dailyJournalId  String?
+}
+
+
+model DailyJournal {
+  id                String   @id @default(cuid())
+  date              String   @unique
+  marketOverview    String?  // General market conditions
+  mood              String?  // Overall mood for the day
+  physicalCondition String?  // Physical condition (sleep, energy, etc.)
+  goals             String?  // Goals for the day
+  achievements      String?  // What was accomplished
+  challenges        String?  // Challenges faced
+  insights          String?  // Key insights or realizations
+  improvementAreas  String?  // Areas to improve
+  planForTomorrow   String?  // Plan for the next day
+  gratitude         String?  // Things to be grateful for
+  screenshots       String[] // URLs to screenshots or images
+  ruleModification  String?  // Suggested modifications to trading rules
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  trades            TradeJournalEntry[] // Trades made on this day
 }

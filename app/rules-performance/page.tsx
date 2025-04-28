@@ -21,8 +21,17 @@ export default function RulesPerformancePage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Function to refresh data
-    const refreshData = () => {
-        setRefreshTrigger((prev) => prev + 1);
+    const refreshData = async () => {
+        try {
+            const entriesResult = await getRulePerformanceEntriesForDateAction(
+                formattedDate
+            );
+            if (entriesResult.success) {
+                setEntries(entriesResult.data || []);
+            }
+        } catch (err) {
+            console.error("Error refreshing data:", err);
+        }
     };
 
     // Load rules and performance entries
