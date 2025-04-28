@@ -14,14 +14,15 @@ import { getRulesAction } from "../rules/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarPlus, CalendarRange, Loader2 } from "lucide-react";
+import { CalendarPlus, Loader2 } from "lucide-react";
 import { JournalStatistics } from "./components/journal-statistics";
 import { TradesList } from "./components/trades-list";
 import { DateRangeStatistics } from "./components/date-range-statistics";
 import { formatDate } from "@/lib/utils";
 import type { TradeJournalEntryWithRules, Rule } from "@/lib/types";
+import { DatePicker } from "@/components/ui/date-picker";
 
-type TimeRange = "week" | "month" | "all";
+type TimeRange = "week" | "month" | "all" | "custom";
 
 export default function JournalPage() {
     const [selectedRange, setSelectedRange] = useState<TimeRange>("week");
@@ -76,6 +77,13 @@ export default function JournalPage() {
                 setStartDate(undefined);
                 setEndDate(undefined);
                 break;
+            }
+            case "custom": {
+                // For custom, we don't automatically set dates or trigger a load
+                // The user will select dates and click Apply
+                if (!startDate) setStartDate(today);
+                if (!endDate) setEndDate(today);
+                return; // Don't trigger a load yet
             }
         }
     }, [selectedRange]);
@@ -176,12 +184,6 @@ export default function JournalPage() {
                                 New Trade
                             </Link>
                         </Button>
-                        <Button asChild variant="outline">
-                            <Link href="/journal/range">
-                                <CalendarRange className="mr-2 h-4 w-4" />
-                                Advanced Filters
-                            </Link>
-                        </Button>
                     </div>
                 </div>
 
@@ -206,6 +208,12 @@ export default function JournalPage() {
                             <TabsTrigger value="all" disabled={isChangingRange}>
                                 All Trades
                             </TabsTrigger>
+                            <TabsTrigger
+                                value="custom"
+                                disabled={isChangingRange}
+                            >
+                                Custom Range
+                            </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className="flex items-center gap-2">
@@ -219,6 +227,40 @@ export default function JournalPage() {
                         )}
                     </div>
                 </div>
+
+                {selectedRange === "custom" && (
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                        <div className="flex-1">
+                            <p className="text-sm text-muted-foreground mb-2">
+                                Start Date
+                            </p>
+                            <DatePicker
+                                date={startDate}
+                                setDate={setStartDate}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm text-muted-foreground mb-2">
+                                End Date
+                            </p>
+                            <DatePicker date={endDate} setDate={setEndDate} />
+                        </div>
+                        <div className="flex items-end">
+                            <Button
+                                onClick={() => {
+                                    if (startDate && endDate) {
+                                        setIsChangingRange(true);
+                                    }
+                                }}
+                                disabled={
+                                    !startDate || !endDate || isChangingRange
+                                }
+                            >
+                                Apply
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {error && (
                     <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md">
