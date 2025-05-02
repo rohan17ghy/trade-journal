@@ -1,5 +1,5 @@
 import { getRulesAction } from "./actions";
-import { AddRuleForm } from "./add-rule-form";
+import { RuleForm } from "./rule-form";
 import { RulesList } from "./rules-list";
 import type { Rule } from "@/lib/types";
 
@@ -21,7 +21,7 @@ export default async function RulesPage() {
                     </p>
                 </div>
 
-                <AddRuleForm />
+                <RuleForm />
 
                 {!success && (
                     <div className="text-red-500">

@@ -14,14 +14,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { addRuleAction } from "./actions";
+import { addRuleAction, updateRuleAction } from "./actions";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Description } from "@radix-ui/react-toast";
 import { Resolver } from "dns";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Rule } from "postcss";
-import { ActionResult } from "@/lib/types";
+//import { Rule } from "postcss";
+import { ActionResult, Rule } from "@/lib/types";
+import { BlockEditor } from "@/components/block-editor";
 
 const RuleCategoryEnum = z.enum([
     "Entry",
@@ -32,15 +33,18 @@ const RuleCategoryEnum = z.enum([
 ]);
 
 const RulesSchema = z.object({
-    name: z.string().min(1, "Rule Name cannot be empty"),
-    category: RuleCategoryEnum,
-    description: z.string().min(1, "Description cannot be empty"),
+    name: z.string().min(1, "Rule Name cannot be empty").default(""),
+    category: RuleCategoryEnum.default(RuleCategoryEnum.Enum.Other),
+    description: z.string().min(1, "Description cannot be empty").default(""),
 });
 
 export type RuleFormFields = z.infer<typeof RulesSchema>;
 
-export function AddRuleForm() {
-    const router = useRouter();
+export function RuleForm({ rule }: { rule?: Rule }) {
+    const isEdit: boolean = !!rule?.id;
+
+    const { name, category, description } =
+        RulesSchema.safeParse(rule).data || {};
 
     const {
         register,
@@ -49,10 +53,16 @@ export function AddRuleForm() {
         reset,
         control,
         formState: { errors, isSubmitting },
-    } = useForm<RuleFormFields>({ resolver: zodResolver(RulesSchema) });
+    } = useForm<RuleFormFields>({
+        resolver: zodResolver(RulesSchema),
+        defaultValues: { name, category, description },
+    });
 
     const onSubmit: SubmitHandler<RuleFormFields> = async (data) => {
-        const result = await addRuleAction(data);
+        const result =
+            isEdit && rule?.id
+                ? await updateRuleAction(rule?.id, data)
+                : await addRuleAction(data);
         if (result.success) {
             reset();
             //TODO: Here need to navigate to some other page
@@ -110,7 +120,17 @@ export function AddRuleForm() {
 
                 <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea {...register("description")} rows={3} />
+                    <Controller
+                        name="description"
+                        control={control}
+                        render={({ field }) => (
+                            <BlockEditor
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                            />
+                        )}
+                    ></Controller>
+                    {/* <Textarea {...register("description")} rows={3} /> */}
                 </div>
                 {errors.description && (
                     <span className="text-red-500">
@@ -127,7 +147,13 @@ export function AddRuleForm() {
                 )}
 
                 <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Adding..." : "Add Rule"}
+                    {isSubmitting
+                        ? isEdit
+                            ? "Updating..."
+                            : "Adding..."
+                        : isEdit
+                        ? "Update Rule"
+                        : "Add Rule"}
                 </Button>
             </form>
         </div>

@@ -3,18 +3,27 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/db";
 import type { ActionResult, Rule } from "@/lib/types";
-import { RuleFormFields } from "./add-rule-form";
+import type { RuleFormFields } from "./rule-form";
 
 export async function addRuleAction(
-    formData: RuleFormFields
+    data: RuleFormFields
 ): Promise<ActionResult<Rule>> {
     try {
-        const name = formData.name;
-        const description = formData.description;
-        const category = formData.category;
+        const { name, category, description } = data;
 
         if (!name || !category) {
             throw new Error("Name and category are required");
+        }
+
+        // Validate that description is valid JSON if it's not empty
+        if (description) {
+            try {
+                // Just to validate it's proper JSON
+                JSON.parse(description);
+            } catch (e) {
+                console.error("Invalid JSON in description:", e);
+                throw new Error("Description contains invalid data");
+            }
         }
 
         const rule = await prisma.rule.create({
@@ -29,21 +38,34 @@ export async function addRuleAction(
         return { success: true, data: rule };
     } catch (error) {
         console.error("Failed to add rule:", error);
-        return { success: false, error: "Failed to add rule" };
+        return {
+            success: false,
+            error:
+                error instanceof Error ? error.message : "Failed to add rule",
+        };
     }
 }
 
 export async function updateRuleAction(
     id: string,
-    formData: FormData
+    data: RuleFormFields
 ): Promise<ActionResult<Rule>> {
     try {
-        const name = formData.get("name") as string;
-        const description = formData.get("description") as string;
-        const category = formData.get("category") as string;
+        const { name, category, description } = data;
 
         if (!name || !category) {
             throw new Error("Name and category are required");
+        }
+
+        // Validate that description is valid JSON if it's not empty
+        if (description) {
+            try {
+                // Just to validate it's proper JSON
+                JSON.parse(description);
+            } catch (e) {
+                console.error("Invalid JSON in description:", e);
+                throw new Error("Description contains invalid data");
+            }
         }
 
         const rule = await prisma.rule.update({
@@ -59,7 +81,13 @@ export async function updateRuleAction(
         return { success: true, data: rule };
     } catch (error) {
         console.error("Failed to update rule:", error);
-        return { success: false, error: "Failed to update rule" };
+        return {
+            success: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to update rule",
+        };
     }
 }
 
