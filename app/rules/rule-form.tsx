@@ -1,11 +1,8 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -15,14 +12,11 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { addRuleAction, updateRuleAction } from "./actions";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import { Description } from "@radix-ui/react-toast";
-import { Resolver } from "dns";
-import { zodResolver } from "@hookform/resolvers/zod";
-//import { Rule } from "postcss";
-import { ActionResult, Rule } from "@/lib/types";
 import { BlockEditor } from "@/components/block-editor";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Rule } from "@/lib/types";
 
 const RuleCategoryEnum = z.enum([
     "Entry",
@@ -40,8 +34,14 @@ const RulesSchema = z.object({
 
 export type RuleFormFields = z.infer<typeof RulesSchema>;
 
-export function RuleForm({ rule }: { rule?: Rule }) {
+interface RuleFormProps {
+    rule?: Rule;
+    onCancel?: () => void;
+}
+
+export function RuleForm({ rule, onCancel }: RuleFormProps) {
     const isEdit: boolean = !!rule?.id;
+    const router = useRouter();
 
     const { name, category, description } =
         RulesSchema.safeParse(rule).data || {};
@@ -65,15 +65,31 @@ export function RuleForm({ rule }: { rule?: Rule }) {
                 : await addRuleAction(data);
         if (result.success) {
             reset();
-            //TODO: Here need to navigate to some other page
+            if (onCancel) {
+                onCancel(); // Hide the form after successful submission
+            } else if (isEdit) {
+                router.push("/rules"); // Navigate back to rules page after editing
+            }
+            router.refresh(); // Refresh the page to show the updated list
         } else {
             setError("root", { message: result.error });
         }
     };
 
+    const handleCancel = () => {
+        if (onCancel) {
+            onCancel();
+        } else {
+            // If no onCancel provided (in edit mode), navigate back to rules page
+            router.push("/rules");
+        }
+    };
+
     return (
         <div className="border rounded-lg p-4 border-border">
-            <h2 className="text-lg font-medium mb-4">Add New Rule</h2>
+            <h2 className="text-lg font-medium mb-4">
+                {isEdit ? "Edit Rule" : "Add Rule"}
+            </h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid gap-2">
                     <Label htmlFor="name">Rule Name</Label>
@@ -130,7 +146,6 @@ export function RuleForm({ rule }: { rule?: Rule }) {
                             />
                         )}
                     ></Controller>
-                    {/* <Textarea {...register("description")} rows={3} /> */}
                 </div>
                 {errors.description && (
                     <span className="text-red-500">
@@ -138,23 +153,35 @@ export function RuleForm({ rule }: { rule?: Rule }) {
                     </span>
                 )}
 
-                {/* Root error messages which are set for generic error messages which are not tied to any field
-                 Usefull mostly when there are error from the API*/}
                 {errors.root && (
                     <div className="text-red-500 text-sm">
                         {errors.root.message}
                     </div>
                 )}
 
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting
-                        ? isEdit
-                            ? "Updating..."
-                            : "Adding..."
-                        : isEdit
-                        ? "Update Rule"
-                        : "Add Rule"}
-                </Button>
+                <div className="flex justify-end gap-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="min-w-[100px]"
+                        onClick={handleCancel}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="min-w-[100px]"
+                    >
+                        {isSubmitting
+                            ? isEdit
+                                ? "Updating..."
+                                : "Adding..."
+                            : isEdit
+                            ? "Update Rule"
+                            : "Add Rule"}
+                    </Button>
+                </div>
             </form>
         </div>
     );
