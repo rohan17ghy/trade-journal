@@ -3,33 +3,30 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/db";
 import type { ActionResult, Rule } from "@/lib/types";
-import type { RuleFormFields } from "./rule-form";
+import { RulesSchema, type RuleFormFields } from "../zod/schema";
 
 export async function addRuleAction(
     data: RuleFormFields
 ): Promise<ActionResult<Rule>> {
     try {
-        const { name, category, description } = data;
-
-        if (!name || !category) {
-            throw new Error("Name and category are required");
+        //Validation of data in server side
+        const result = RulesSchema.safeParse(data);
+        if (result.error) {
+            console.log(
+                `Error validating data with zod schema`,
+                result.error.message
+            );
+            throw new Error(`Zod validation failed`, result.error);
         }
 
-        // Validate that description is valid JSON if it's not empty
-        if (description) {
-            try {
-                // Just to validate it's proper JSON
-                JSON.parse(description);
-            } catch (e) {
-                console.error("Invalid JSON in description:", e);
-                throw new Error("Description contains invalid data");
-            }
-        }
+        //destructuring the data after validaiton
+        const { name, category, description } = result.data;
 
+        //Adding to the db
         const rule = await prisma.rule.create({
             data: {
                 name,
-                description: description || "",
+                description,
                 category,
             },
         });
@@ -51,28 +48,24 @@ export async function updateRuleAction(
     data: RuleFormFields
 ): Promise<ActionResult<Rule>> {
     try {
-        const { name, category, description } = data;
-
-        if (!name || !category) {
-            throw new Error("Name and category are required");
+        //Validation of data in server side
+        const result = RulesSchema.safeParse(data);
+        if (result.error) {
+            console.log(
+                `Error validating data with zod schema`,
+                result.error.message
+            );
+            throw new Error(`Zod validation failed`, result.error);
         }
 
-        // Validate that description is valid JSON if it's not empty
-        if (description) {
-            try {
-                // Just to validate it's proper JSON
-                JSON.parse(description);
-            } catch (e) {
-                console.error("Invalid JSON in description:", e);
-                throw new Error("Description contains invalid data");
-            }
-        }
+        //destructuring the data after validaiton
+        const { name, category, description } = result.data;
 
         const rule = await prisma.rule.update({
             where: { id },
             data: {
                 name,
-                description: description || "",
+                description: description,
                 category,
             },
         });

@@ -17,22 +17,8 @@ import { z } from "zod";
 import { BlockEditor } from "@/components/block-editor";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Rule } from "@/lib/types";
-
-const RuleCategoryEnum = z.enum([
-    "Entry",
-    "Exit",
-    "Risk Management",
-    "Psychology",
-    "Other",
-]);
-
-const RulesSchema = z.object({
-    name: z.string().min(1, "Rule Name cannot be empty").default(""),
-    category: RuleCategoryEnum.default(RuleCategoryEnum.Enum.Other),
-    description: z.string().min(1, "Description cannot be empty").default(""),
-});
-
-export type RuleFormFields = z.infer<typeof RulesSchema>;
+import TailwindAdvancedEditor from "@/components/editor/advanced-editor";
+import { RulesSchema, RuleCategoryEnum, RuleFormFields } from "../zod/schema";
 
 interface RuleFormProps {
     rule?: Rule;
@@ -139,17 +125,18 @@ export function RuleForm({ rule, onCancel }: RuleFormProps) {
                     <Controller
                         name="description"
                         control={control}
-                        render={({ field }) => (
-                            <BlockEditor
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                            />
-                        )}
+                        render={({ field }) => {
+                            return (
+                                <TailwindAdvancedEditor
+                                    onChange={field.onChange}
+                                />
+                            );
+                        }}
                     ></Controller>
                 </div>
                 {errors.description && (
                     <span className="text-red-500">
-                        {errors.description.message}
+                        {(errors.description?.message as string) || ""}
                     </span>
                 )}
 

@@ -13,7 +13,7 @@ datasource db {
 model Rule {
   id          String    @id @default(cuid())
   name        String
-  description String?
+  description Json      @default("{\"type\": \"doc\", \"content\": []}") // Novel JSONContent
   category    String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

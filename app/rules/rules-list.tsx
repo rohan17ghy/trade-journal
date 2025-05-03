@@ -373,9 +373,9 @@ export function RulesList({ initialRules }: RulesListProps) {
                                 <div className="text-sm text-muted-foreground max-h-40 overflow-hidden relative">
                                     {rule.description ? (
                                         <>
-                                            {renderDescription(
+                                            {/* {renderDescription(
                                                 rule.description
-                                            )}
+                                            )} */}
                                             <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background to-transparent"></div>
                                         </>
                                     ) : (

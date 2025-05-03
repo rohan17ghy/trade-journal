@@ -1,9 +1,13 @@
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
+
+import "../styles/prosemirror.css";
+import "./globals.css";
+import "katex/dist/katex.min.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
