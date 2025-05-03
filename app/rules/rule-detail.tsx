@@ -19,7 +19,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { BlockEditor } from "@/components/block-editor";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/shadcn/style.css";
@@ -28,6 +27,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateRuleAction } from "./actions";
 import type { Rule } from "@/lib/types";
+import TailwindAdvancedEditor from "@/components/editor/advanced-editor";
+import { JSONContent } from "novel";
+import { JSONContentSchema } from "../zod/schema";
 
 interface RuleDetailProps {
     rule: Rule | null;
@@ -39,6 +41,8 @@ interface RuleDetailProps {
 }
 
 export function RuleDetail({ rule, open, onOpenChange }: RuleDetailProps) {
+    const parsedDesc = JSONContentSchema.safeParse(rule?.description);
+
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
@@ -68,8 +72,13 @@ export function RuleDetail({ rule, open, onOpenChange }: RuleDetailProps) {
                                         Description
                                     </h4>
                                     <div className="bg-muted/50 p-4 rounded-md">
-                                        <BlockEditor
-                                            value={rule?.description || ""}
+                                        <TailwindAdvancedEditor
+                                            {...(parsedDesc.success
+                                                ? {
+                                                      initialContent:
+                                                          parsedDesc.data,
+                                                  }
+                                                : {})}
                                         />
                                     </div>
                                 </div>

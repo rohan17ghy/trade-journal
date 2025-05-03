@@ -14,11 +14,16 @@ import {
 import { addRuleAction, updateRuleAction } from "./actions";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import { BlockEditor } from "@/components/block-editor";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Rule } from "@/lib/types";
 import TailwindAdvancedEditor from "@/components/editor/advanced-editor";
-import { RulesSchema, RuleCategoryEnum, RuleFormFields } from "../zod/schema";
+import {
+    RulesSchema,
+    RuleCategoryEnum,
+    RuleFormFields,
+    JSONContentSchema,
+} from "../zod/schema";
+import { JSONContent } from "novel";
 
 interface RuleFormProps {
     rule?: Rule;
@@ -126,8 +131,15 @@ export function RuleForm({ rule, onCancel }: RuleFormProps) {
                         name="description"
                         control={control}
                         render={({ field }) => {
+                            const parsedDesc = JSONContentSchema.safeParse(
+                                field.value
+                            );
+
                             return (
                                 <TailwindAdvancedEditor
+                                    {...(parsedDesc.success && {
+                                        initialContent: parsedDesc.data,
+                                    })}
                                     onChange={field.onChange}
                                 />
                             );

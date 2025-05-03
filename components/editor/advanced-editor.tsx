@@ -40,7 +40,7 @@ const TailwindAdvancedEditor = ({
     onChange,
 }: {
     initialContent?: JSONContent;
-    onChange: (content: JSONContent) => void;
+    onChange?: (content: JSONContent) => void;
 }) => {
     // const [initialContent, setInitialContent] = useState<null | JSONContent>({
     //     type: "doc",
@@ -130,7 +130,7 @@ const TailwindAdvancedEditor = ({
                     onUpdate={({ editor }: { editor: EditorInstance }) => {
                         //TODO: Use debouncing to reduce the events fired rate
                         //this is not very performant as onChange will fire very frequently
-                        onChange(editor.getJSON());
+                        onChange && onChange(editor.getJSON());
                         setSaveStatus("Unsaved");
                     }}
                     slotAfter={<ImageResizer />}
