@@ -33,6 +33,8 @@ import type {
     RulePerformanceEntryWithRule,
 } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
+import TailwindAdvancedEditor from "@/components/editor/advanced-editor";
+import { JSONContentSchema } from "../zod/schema";
 
 interface RulePerformanceFormProps {
     rules: Rule[];
@@ -65,6 +67,12 @@ export function RulePerformanceForm({
     const selectedRule = selectedRuleId
         ? rules.find((rule) => rule.id === selectedRuleId)
         : null;
+
+    const desc = JSONContentSchema.safeParse(selectedRule.description);
+    let parsedDesc = {};
+    if (desc.success) {
+        parsedDesc = desc.data;
+    }
 
     // Refresh entries when date changes or after adding a new entry
     const refreshEntries = async () => {
@@ -341,7 +349,10 @@ export function RulePerformanceForm({
                 <div className="space-y-6">
                     {selectedRule?.description && (
                         <div className="bg-muted/50 p-3 rounded-md text-sm">
-                            {selectedRule.description}
+                            <TailwindAdvancedEditor
+                                initialContent={parsedDesc}
+                            />
+                            {/* {selectedRule.description} */}
                         </div>
                     )}
 
