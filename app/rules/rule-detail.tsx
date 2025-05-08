@@ -59,12 +59,43 @@ export function RuleDetail({ rule, open, onOpenChange }: RuleDetailProps) {
                             // View Mode
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-lg font-medium">
-                                        {rule.name}
-                                    </h3>
-                                    <Badge className="mt-1">
-                                        {rule.category}
-                                    </Badge>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-medium">
+                                                {rule.name}
+                                            </h3>
+                                            <Badge className="mt-1">
+                                                {rule.category}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Status indicator - moved to the right */}
+                                        <div className="flex items-center gap-1.5">
+                                            <span
+                                                className={`text-xs font-medium ${
+                                                    rule.isActive
+                                                        ? "text-green-600"
+                                                        : "text-gray-500"
+                                                }`}
+                                            >
+                                                {rule.isActive
+                                                    ? "Active"
+                                                    : "Inactive"}
+                                            </span>
+                                            <div
+                                                className={`w-2.5 h-2.5 rounded-full ${
+                                                    rule.isActive
+                                                        ? "bg-green-500"
+                                                        : "bg-gray-400"
+                                                } animate-pulse`}
+                                                title={
+                                                    rule.isActive
+                                                        ? "Active"
+                                                        : "Inactive"
+                                                }
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">

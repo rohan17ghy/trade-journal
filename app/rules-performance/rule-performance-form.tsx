@@ -68,7 +68,7 @@ export function RulePerformanceForm({
         ? rules.find((rule) => rule.id === selectedRuleId)
         : null;
 
-    const desc = JSONContentSchema.safeParse(selectedRule.description);
+    const desc = JSONContentSchema.safeParse(selectedRule?.description);
     let parsedDesc = {};
     if (desc.success) {
         parsedDesc = desc.data;

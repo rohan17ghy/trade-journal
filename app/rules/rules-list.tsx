@@ -13,6 +13,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
     BookOpen,
     Edit,
@@ -26,8 +27,9 @@ import {
     CheckCircle2,
     ListOrdered,
     ListChecks,
+    EyeOff,
 } from "lucide-react";
-import { deleteRuleAction } from "./actions";
+import { deleteRuleAction, updateRuleAction } from "./actions";
 import { RuleDetail } from "./rule-detail";
 import type { Rule } from "@/lib/types";
 import Link from "next/link";
@@ -67,6 +69,7 @@ const categoryConfig: Record<
 export function RulesList({ initialRules }: RulesListProps) {
     const [rules, setRules] = useState<Rule[]>(initialRules);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [isToggling, setIsToggling] = useState<string | null>(null);
     const [selectedRule, setSelectedRule] = useState<Rule | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -96,6 +99,47 @@ export function RulesList({ initialRules }: RulesListProps) {
 
             setIsDeleting(null);
             router.refresh();
+        }
+    }
+
+    async function handleToggleActive(rule: Rule, e: React.MouseEvent) {
+        e.stopPropagation(); // Prevent the card click event from triggering
+
+        console.log(`Handle toggle active triggered`);
+
+        setIsToggling(rule.id);
+
+        try {
+            const updatedRule = {
+                ...rule,
+                isActive: !rule.isActive,
+            };
+
+            const result = await updateRuleAction(rule.id, updatedRule);
+
+            if (result.success) {
+                // Update the rules state with the updated rule
+                setRules(
+                    rules.map((r) =>
+                        r.id === rule.id ? { ...r, isActive: !r.isActive } : r
+                    )
+                );
+
+                // If this rule is currently selected, update the selected rule too
+                if (selectedRule?.id === rule.id) {
+                    setSelectedRule({
+                        ...selectedRule,
+                        isActive: !selectedRule.isActive,
+                    });
+                }
+            } else {
+                alert("Failed to update rule status");
+            }
+        } catch (error) {
+            console.error("Error toggling rule status:", error);
+            alert("An error occurred while updating the rule");
+        } finally {
+            setIsToggling(null);
         }
     }
 
@@ -342,25 +386,99 @@ export function RulesList({ initialRules }: RulesListProps) {
                     // Use abbreviated category name if available
                     const displayCategory = categoryStyle.abbr || rule.category;
 
+                    // Check if rule is inactive
+                    const isInactive = rule.isActive === false;
+
                     return (
                         <Card
                             key={rule.id}
-                            className="hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full border-l-4 hover:scale-[1.01]"
+                            className={`group relative overflow-hidden rounded-lg transition-all duration-300 cursor-pointer flex flex-col h-full border-l-4 hover:scale-[1.01] ${
+                                isInactive
+                                    ? "bg-gray-950/80 border-gray-950 shadow-none"
+                                    : "bg-black border-gray-700 shadow-md hover:shadow-xl"
+                            }`}
                             style={{ borderLeftColor: borderColor }}
                             onClick={() => handleViewRule(rule)}
                         >
-                            <CardHeader className="pb-1 pt-3 px-4">
-                                <div className="flex items-start gap-8">
+                            {/* Subtle background gradient on hover for active state */}
+                            <div
+                                className={`absolute inset-0 transition-opacity duration-300 ${
+                                    isInactive
+                                        ? "bg-gray-950/90"
+                                        : "group-hover:bg-gradient-to-br from-gray-900 to-black opacity-0 group-hover:opacity-100"
+                                }`}
+                            ></div>
+
+                            <CardHeader className="relative pb-1 pt-4 px-5">
+                                <div className="flex items-start gap-3">
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <BookOpen className="h-5 w-5 text-slate-600 flex-shrink-0" />
-                                        <CardTitle className="text-lg truncate">
+                                        {isInactive ? (
+                                            <EyeOff className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                                        ) : (
+                                            <BookOpen className="h-5 w-5 text-white flex-shrink-0" />
+                                        )}
+                                        <CardTitle
+                                            className={`text-lg font-semibold truncate ${
+                                                isInactive
+                                                    ? "text-gray-600"
+                                                    : "text-white"
+                                            }`}
+                                        >
                                             {rule.name}
                                         </CardTitle>
                                     </div>
+
+                                    {/* Active toggle switch */}
+                                    <div
+                                        className="flex items-center gap-2 ml-auto"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <span
+                                            className={`text-xs font-medium ${
+                                                isInactive
+                                                    ? "text-gray-600"
+                                                    : "text-gray-300"
+                                            }`}
+                                        >
+                                            {rule.isActive
+                                                ? "Active"
+                                                : "Inactive"}
+                                        </span>
+                                        <Switch
+                                            checked={rule.isActive === true}
+                                            disabled={isToggling === rule.id}
+                                            onCheckedChange={(checked) => {
+                                                handleToggleActive(rule, {
+                                                    stopPropagation: () => {},
+                                                } as React.MouseEvent);
+                                            }}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                                                isInactive
+                                                    ? "bg-gray-950"
+                                                    : "bg-gray-700 data-[state=checked]:bg-white"
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-gray-400 transition-transform duration-200 ${
+                                                    rule.isActive
+                                                        ? "translate-x-6"
+                                                        : "translate-x-1"
+                                                }`}
+                                            />
+                                        </Switch>
+                                    </div>
+                                </div>
+
+                                {/* Category badge */}
+                                <div className="flex mt-3">
                                     <Badge
-                                        className={`${categoryStyle.color} flex items-center gap-1 px-2 py-0.5 font-medium whitespace-nowrap max-w-[100px] overflow-hidden flex-shrink-0 ml-auto`}
+                                        className={`${
+                                            isInactive
+                                                ? "bg-gray-950/50 text-gray-600 border-gray-950"
+                                                : `${categoryStyle.color} border-gray-600`
+                                        } flex items-center gap-1 px-2.5 py-0.5 font-medium text-xs rounded-full whitespace-nowrap overflow-hidden transition-colors`}
                                         variant="outline"
-                                        title={rule.category} // Add title for tooltip on hover
+                                        title={rule.category}
                                     >
                                         {categoryStyle.icon}
                                         <span className="truncate">
@@ -369,28 +487,38 @@ export function RulesList({ initialRules }: RulesListProps) {
                                     </Badge>
                                 </div>
                             </CardHeader>
-                            <CardContent className="flex-grow pt-2 px-4">
-                                <div className="text-sm text-muted-foreground max-h-40 overflow-hidden relative">
+
+                            <CardContent className="relative flex-grow pt-3 px-5">
+                                <div
+                                    className={`text-sm leading-relaxed ${
+                                        isInactive
+                                            ? "text-gray-600"
+                                            : "text-gray-300"
+                                    } max-h-40 overflow-hidden relative`}
+                                >
                                     {rule.description ? (
                                         <>
-                                            {/* {renderDescription(
-                                                rule.description
-                                            )} */}
-                                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background to-transparent"></div>
+                                            {/* {renderDescription(rule.description)} */}
+                                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent"></div>
                                         </>
                                     ) : (
-                                        <div className="flex items-center text-amber-600 gap-2">
+                                        <div className="flex items-center text-amber-400 gap-2">
                                             <AlertTriangle className="h-4 w-4" />
                                             No description provided
                                         </div>
                                     )}
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-end gap-2 mt-auto pt-2 pb-3 px-4">
+
+                            <CardFooter className="relative flex justify-end gap-2 mt-auto pt-3 pb-4 px-5">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                                    className={`rounded-md border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-gray-500 transition-all duration-200 ${
+                                        isInactive
+                                            ? "border-gray-950 text-gray-600 hover:bg-gray-950"
+                                            : ""
+                                    }`}
                                     asChild
                                 >
                                     <Link
@@ -404,7 +532,11 @@ export function RulesList({ initialRules }: RulesListProps) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                                    className={`rounded-md border-gray-600 text-gray-300 hover:bg-red-950 hover:text-red-400 hover:border-red-700 transition-all duration-200 ${
+                                        isInactive
+                                            ? "border-gray-950 text-gray-600 hover:bg-gray-950"
+                                            : ""
+                                    }`}
                                     onClick={(e) => handleDelete(rule.id, e)}
                                     disabled={isDeleting === rule.id}
                                 >

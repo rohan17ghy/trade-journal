@@ -45,7 +45,7 @@ export async function addRuleAction(
 
 export async function updateRuleAction(
     id: string,
-    data: RuleFormFields
+    data: RuleFormFields | Rule
 ): Promise<ActionResult<Rule>> {
     try {
         //Validation of data in server side
@@ -59,15 +59,11 @@ export async function updateRuleAction(
         }
 
         //destructuring the data after validaiton
-        const { name, category, description } = result.data;
+        //const { name, category, description } = result.data;
 
         const rule = await prisma.rule.update({
             where: { id },
-            data: {
-                name,
-                description: description,
-                category,
-            },
+            data: result.data,
         });
 
         revalidatePath("/rules");

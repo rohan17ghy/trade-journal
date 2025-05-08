@@ -21,6 +21,7 @@ export const RulesSchema = z.object({
     name: z.string().min(1, "Rule Name cannot be empty").default(""),
     category: RuleCategoryEnum.default(RuleCategoryEnum.Enum.Other),
     description: JSONContentSchema.default({ type: "doc", content: [] }),
+    isActive: z.boolean().default(false),
 });
 
 export type RuleFormFields = z.infer<typeof RulesSchema>;

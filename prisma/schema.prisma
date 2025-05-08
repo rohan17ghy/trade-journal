@@ -15,6 +15,7 @@ model Rule {
   name        String
   description Json      @default("{\"type\": \"doc\", \"content\": []}") // Novel JSONContent
   category    String
+  isActive    Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   performances RulePerformanceEntry[]
