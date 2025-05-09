@@ -397,7 +397,7 @@ function getDescriptionSummary(description: any) {
     }
 }
 
-// Helper function to create rule versions
+// Helper function to create rule versions with distinct content
 async function createRuleVersions() {
     console.log("Creating rule versions...");
 
@@ -411,34 +411,73 @@ async function createRuleVersions() {
 
     console.log(`Found ${rules.length} rules. Creating versions...`);
 
-    // Clear existing versions (optional)
+    // Clear existing versions
     await prisma.ruleVersion.deleteMany({});
     console.log("Cleared existing rule versions");
 
     let createdVersions = 0;
+    const versionsCreated = [];
 
-    // For each rule, create multiple versions
+    // For each rule, create multiple versions with DISTINCT content
     for (const rule of rules) {
-        // Create version 1 (initial version)
-        await prisma.ruleVersion.create({
+        console.log(`Creating versions for rule: ${rule.name} (${rule.id})`);
+
+        // Create version 1 (initial version - simplified)
+        const version1Description = {
+            type: "doc",
+            content: [
+                {
+                    type: "paragraph",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Initial version of ${rule.name}: Basic rule definition.`,
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const version1 = await prisma.ruleVersion.create({
             data: {
                 ruleId: rule.id,
                 versionNumber: 1,
-                name: rule.name,
-                description: rule.description || { type: "doc", content: [] },
+                name: `${rule.name} - Initial`,
+                description: version1Description,
                 category: rule.category,
                 isActive: false, // Start inactive
                 createdAt: subDays(new Date(), 30), // 30 days ago
             },
         });
         createdVersions++;
+        versionsCreated.push({
+            ruleId: rule.id,
+            versionNumber: 1,
+            name: version1.name,
+            descriptionPreview:
+                getDescriptionSummary(version1Description).textPreview,
+        });
 
         // Create version 2 (with some changes)
-        const version2Description =
-            sampleDescriptions[
-                Math.floor(Math.random() * sampleDescriptions.length)
-            ];
-        await prisma.ruleVersion.create({
+        // Use a specific sample description based on rule index to ensure it's different
+        const sampleIndex = rules.indexOf(rule) % sampleDescriptions.length;
+        const version2Description = {
+            ...sampleDescriptions[sampleIndex],
+            content: [
+                ...(sampleDescriptions[sampleIndex].content || []),
+                {
+                    type: "paragraph",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Version 2 addition to ${rule.name}.`,
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const version2 = await prisma.ruleVersion.create({
             data: {
                 ruleId: rule.id,
                 versionNumber: 2,
@@ -450,13 +489,34 @@ async function createRuleVersions() {
             },
         });
         createdVersions++;
+        versionsCreated.push({
+            ruleId: rule.id,
+            versionNumber: 2,
+            name: version2.name,
+            descriptionPreview:
+                getDescriptionSummary(version2Description).textPreview,
+        });
 
         // Create version 3 (with more changes)
-        const version3Description =
-            enhancedDescriptions[
-                Math.floor(Math.random() * enhancedDescriptions.length)
-            ];
-        await prisma.ruleVersion.create({
+        // Use a specific enhanced description based on rule index to ensure it's different
+        const enhancedIndex = rules.indexOf(rule) % enhancedDescriptions.length;
+        const version3Description = {
+            ...enhancedDescriptions[enhancedIndex],
+            content: [
+                ...(enhancedDescriptions[enhancedIndex].content || []),
+                {
+                    type: "paragraph",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Version 3 enhancement to ${rule.name}.`,
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const version3 = await prisma.ruleVersion.create({
             data: {
                 ruleId: rule.id,
                 versionNumber: 3,
@@ -468,46 +528,133 @@ async function createRuleVersions() {
             },
         });
         createdVersions++;
+        versionsCreated.push({
+            ruleId: rule.id,
+            versionNumber: 3,
+            name: version3.name,
+            descriptionPreview:
+                getDescriptionSummary(version3Description).textPreview,
+        });
 
-        // Create version 4 (current version)
-        await prisma.ruleVersion.create({
+        // Create version 4 (current version - with completely new content)
+        const version4Description = {
+            type: "doc",
+            content: [
+                {
+                    type: "heading",
+                    props: { level: 1 },
+                    content: [{ type: "text", text: rule.name }],
+                },
+                {
+                    type: "paragraph",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Current version of ${rule.name} with latest updates.`,
+                        },
+                    ],
+                },
+                {
+                    type: "paragraph",
+                    content: [
+                        {
+                            type: "text",
+                            text: "This is the latest version with all current information.",
+                        },
+                    ],
+                },
+                {
+                    type: "bulletList",
+                    content: [
+                        {
+                            type: "listItem",
+                            content: [
+                                {
+                                    type: "paragraph",
+                                    content: [
+                                        {
+                                            type: "text",
+                                            text: "Final version point 1",
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: "listItem",
+                            content: [
+                                {
+                                    type: "paragraph",
+                                    content: [
+                                        {
+                                            type: "text",
+                                            text: "Final version point 2",
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            type: "listItem",
+                            content: [
+                                {
+                                    type: "paragraph",
+                                    content: [
+                                        {
+                                            type: "text",
+                                            text: `Specific to ${rule.name}`,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const version4 = await prisma.ruleVersion.create({
             data: {
                 ruleId: rule.id,
                 versionNumber: 4,
                 name: rule.name,
-                description: rule.description,
+                description: version4Description,
                 category: rule.category,
                 isActive: rule.isActive,
                 createdAt: new Date(), // Now
             },
         });
         createdVersions++;
+        versionsCreated.push({
+            ruleId: rule.id,
+            versionNumber: 4,
+            name: version4.name,
+            descriptionPreview:
+                getDescriptionSummary(version4Description).textPreview,
+        });
+
+        console.log(`Created 4 versions for rule: ${rule.name}`);
     }
 
     console.log(`Created ${createdVersions} rule versions`);
     return {
         success: true,
         message: `Created ${createdVersions} rule versions`,
+        details: versionsCreated,
     };
 }
 
-export async function POST(request: Request) {
-    if (!isDevelopment) {
-        return NextResponse.json(
-            { error: "This endpoint is only available in development mode" },
-            { status: 403 }
-        );
-    }
-
+// Main seeding function
+async function seedRuleHistory() {
     try {
         // Get all rules
         const rules = await prisma.rule.findMany();
 
         if (rules.length === 0) {
-            return NextResponse.json(
-                { error: "No rules found. Please create some rules first." },
-                { status: 400 }
-            );
+            return {
+                success: false,
+                error: "No rules found. Please create some rules first.",
+            };
         }
 
         // Clear existing history events
@@ -517,10 +664,7 @@ export async function POST(request: Request) {
         // Create rule versions first
         const versionResult = await createRuleVersions();
         if (!versionResult.success) {
-            return NextResponse.json(
-                { error: versionResult.message },
-                { status: 400 }
-            );
+            return { success: false, error: versionResult.message };
         }
 
         // For each rule, create a series of history events over the past 30 days
@@ -847,17 +991,49 @@ export async function POST(request: Request) {
             }
         }
 
-        return NextResponse.json({
+        return {
             success: true,
             message: "Rule history and versions seeded successfully",
             versions: versionResult,
-        });
+        };
     } catch (error) {
         console.error("Error seeding rule history:", error);
+        return { success: false, error: "Failed to seed rule history" };
+    }
+}
+
+// Support both GET and POST methods
+export async function GET(request: Request) {
+    if (!isDevelopment) {
         return NextResponse.json(
-            { error: "Failed to seed rule history" },
-            { status: 500 }
+            { error: "This endpoint is only available in development mode" },
+            { status: 403 }
         );
+    }
+
+    const result = await seedRuleHistory();
+
+    if (result.success) {
+        return NextResponse.json(result);
+    } else {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+}
+
+export async function POST(request: Request) {
+    if (!isDevelopment) {
+        return NextResponse.json(
+            { error: "This endpoint is only available in development mode" },
+            { status: 403 }
+        );
+    }
+
+    const result = await seedRuleHistory();
+
+    if (result.success) {
+        return NextResponse.json(result);
+    } else {
+        return NextResponse.json({ error: result.error }, { status: 400 });
     }
 }
 

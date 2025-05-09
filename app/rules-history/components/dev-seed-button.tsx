@@ -13,7 +13,14 @@ export function DevSeedButton() {
 
         setIsLoading(true);
         try {
-            const response = await fetch("/api/dev/seed-rule-history");
+            // The issue is here - we're using GET instead of POST
+            const response = await fetch("/api/dev/seed-rule-history", {
+                method: "POST", // Changed from GET to POST
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
             const data = await response.json();
 
             if (response.ok) {
@@ -22,14 +29,17 @@ export function DevSeedButton() {
                     description:
                         "Rule history seeded successfully. Refresh the page to see the changes.",
                 });
+                console.log("Seed response:", data);
             } else {
                 toast({
                     title: "Error",
                     description: data.error || "Failed to seed rule history",
                     variant: "destructive",
                 });
+                console.error("Seed error:", data);
             }
         } catch (error) {
+            console.error("Seed exception:", error);
             toast({
                 title: "Error",
                 description: "An unexpected error occurred",
