@@ -9,7 +9,8 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, History, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Rule, RulePerformanceEntryWithRule } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -61,6 +62,9 @@ export default async function DashboardPage() {
             ? Math.round((successfulEntries / totalEntries) * 100)
             : 0;
 
+    // Count active rules
+    const activeRules = rules.filter((rule) => rule.isActive).length;
+
     return (
         <div className="w-full max-w-4xl mx-auto py-8 px-4">
             <div className="flex flex-col gap-8">
@@ -73,7 +77,7 @@ export default async function DashboardPage() {
                     </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -83,6 +87,19 @@ export default async function DashboardPage() {
                         <CardContent>
                             <div className="text-2xl font-bold">
                                 {rules.length}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Active Rules
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {activeRules}
                             </div>
                         </CardContent>
                     </Card>
@@ -103,13 +120,64 @@ export default async function DashboardPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Overall Success Rate
+                                Success Rate
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
                                 {overallSuccessRate}%
                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* New section for Rules History */}
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Card className="hover:shadow-md transition-all">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <History className="h-5 w-5 text-blue-500" />
+                                Rules Timeline
+                            </CardTitle>
+                            <CardDescription>
+                                Track when rules were added, updated, or deleted
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <p className="text-sm text-muted-foreground mb-4">
+                                View a chronological timeline of all changes to
+                                your trading rules.
+                            </p>
+                            <Button asChild>
+                                <Link href="/rules-history?tab=timeline">
+                                    View Timeline
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-md transition-all">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-purple-500" />
+                                Activity History
+                            </CardTitle>
+                            <CardDescription>
+                                See which rules were active on any given day
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Check which trading rules were active or
+                                inactive on specific dates in the past.
+                            </p>
+                            <Button asChild>
+                                <Link href="/rules-history?tab=activity">
+                                    View Activity
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>

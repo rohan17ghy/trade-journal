@@ -20,6 +20,17 @@ model Rule {
   updatedAt   DateTime  @updatedAt
   performances RulePerformanceEntry[]
   tradeJournalEntries TradeJournalEntry[] // Relation to trade journal entries
+  historyEvents RuleHistoryEvent[] // Relation to history events
+}
+
+model RuleHistoryEvent {
+  id          String    @id @default(cuid())
+  ruleId      String
+  ruleName    String
+  eventType   String    // "created", "updated", "deleted", "activated", "deactivated"
+  timestamp   DateTime  @default(now())
+  details     Json?     // Optional: store additional details about the change
+  rule        Rule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
 }
 
 model RulePerformanceEntry {
