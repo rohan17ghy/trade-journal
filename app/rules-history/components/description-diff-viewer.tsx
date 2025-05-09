@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { compareRuleVersionsAction } from "../actions";
 import { diffJson } from "diff";
 import { AlertCircle } from "lucide-react";
+import JsonBlockDiffViewer from "./json-block-diff-viewer";
 
 interface DescriptionDiffViewerProps {
     ruleId: string;
@@ -241,9 +242,6 @@ export function DescriptionDiffViewer({
         </div>
     );
 
-    console.log(versionAData);
-    console.log(versionBData);
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -262,161 +260,166 @@ export function DescriptionDiffViewer({
                 ) : error ? (
                     renderErrorState()
                 ) : (
-                    <div className="flex-1 overflow-auto p-4">
-                        <div className="space-y-6">
-                            {/* Field changes summary */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                                        Other Changes
-                                    </h3>
-                                    <div className="space-y-2 text-sm">
-                                        {versionAData.name !==
-                                            versionBData.name && (
-                                            <div>
-                                                <div className="font-medium">
-                                                    Name:
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 mt-1">
-                                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
-                                                        <div className="text-xs text-red-500 mb-0.5">
-                                                            Version {versionA}
-                                                        </div>
-                                                        {versionAData.name}
-                                                    </div>
-                                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
-                                                        <div className="text-xs text-green-500 mb-0.5">
-                                                            Version {versionB}
-                                                        </div>
-                                                        {versionBData.name}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                    // <div className="flex-1 overflow-auto p-4">
+                    //     <div className="space-y-6">
+                    //         {/* Field changes summary */}
+                    //         <div className="grid grid-cols-2 gap-4">
+                    //             <div>
+                    //                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    //                     Other Changes
+                    //                 </h3>
+                    //                 <div className="space-y-2 text-sm">
+                    //                     {versionAData.name !==
+                    //                         versionBData.name && (
+                    //                         <div>
+                    //                             <div className="font-medium">
+                    //                                 Name:
+                    //                             </div>
+                    //                             <div className="grid grid-cols-2 gap-2 mt-1">
+                    //                                 <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                    //                                     <div className="text-xs text-red-500 mb-0.5">
+                    //                                         Version {versionA}
+                    //                                     </div>
+                    //                                     {versionAData.name}
+                    //                                 </div>
+                    //                                 <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                    //                                     <div className="text-xs text-green-500 mb-0.5">
+                    //                                         Version {versionB}
+                    //                                     </div>
+                    //                                     {versionBData.name}
+                    //                                 </div>
+                    //                             </div>
+                    //                         </div>
+                    //                     )}
 
-                                        {versionAData.category !==
-                                            versionBData.category && (
-                                            <div>
-                                                <div className="font-medium">
-                                                    Category:
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 mt-1">
-                                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
-                                                        <div className="text-xs text-red-500 mb-0.5">
-                                                            Version {versionA}
-                                                        </div>
-                                                        {versionAData.category}
-                                                    </div>
-                                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
-                                                        <div className="text-xs text-green-500 mb-0.5">
-                                                            Version {versionB}
-                                                        </div>
-                                                        {versionBData.category}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                    //                     {versionAData.category !==
+                    //                         versionBData.category && (
+                    //                         <div>
+                    //                             <div className="font-medium">
+                    //                                 Category:
+                    //                             </div>
+                    //                             <div className="grid grid-cols-2 gap-2 mt-1">
+                    //                                 <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                    //                                     <div className="text-xs text-red-500 mb-0.5">
+                    //                                         Version {versionA}
+                    //                                     </div>
+                    //                                     {versionAData.category}
+                    //                                 </div>
+                    //                                 <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                    //                                     <div className="text-xs text-green-500 mb-0.5">
+                    //                                         Version {versionB}
+                    //                                     </div>
+                    //                                     {versionBData.category}
+                    //                                 </div>
+                    //                             </div>
+                    //                         </div>
+                    //                     )}
 
-                                        {versionAData.isActive !==
-                                            versionBData.isActive && (
-                                            <div>
-                                                <div className="font-medium">
-                                                    Active Status:
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 mt-1">
-                                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
-                                                        <div className="text-xs text-red-500 mb-0.5">
-                                                            Version {versionA}
-                                                        </div>
-                                                        {versionAData.isActive
-                                                            ? "Active"
-                                                            : "Inactive"}
-                                                    </div>
-                                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
-                                                        <div className="text-xs text-green-500 mb-0.5">
-                                                            Version {versionB}
-                                                        </div>
-                                                        {versionBData.isActive
-                                                            ? "Active"
-                                                            : "Inactive"}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                    //                     {versionAData.isActive !==
+                    //                         versionBData.isActive && (
+                    //                         <div>
+                    //                             <div className="font-medium">
+                    //                                 Active Status:
+                    //                             </div>
+                    //                             <div className="grid grid-cols-2 gap-2 mt-1">
+                    //                                 <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                    //                                     <div className="text-xs text-red-500 mb-0.5">
+                    //                                         Version {versionA}
+                    //                                     </div>
+                    //                                     {versionAData.isActive
+                    //                                         ? "Active"
+                    //                                         : "Inactive"}
+                    //                                 </div>
+                    //                                 <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                    //                                     <div className="text-xs text-green-500 mb-0.5">
+                    //                                         Version {versionB}
+                    //                                     </div>
+                    //                                     {versionBData.isActive
+                    //                                         ? "Active"
+                    //                                         : "Inactive"}
+                    //                                 </div>
+                    //                             </div>
+                    //                         </div>
+                    //                     )}
 
-                                        {versionAData.name ===
-                                            versionBData.name &&
-                                            versionAData.category ===
-                                                versionBData.category &&
-                                            versionAData.isActive ===
-                                                versionBData.isActive && (
-                                                <div className="text-muted-foreground italic">
-                                                    No changes to name,
-                                                    category, or active status.
-                                                </div>
-                                            )}
-                                    </div>
-                                </div>
+                    //                     {versionAData.name ===
+                    //                         versionBData.name &&
+                    //                         versionAData.category ===
+                    //                             versionBData.category &&
+                    //                         versionAData.isActive ===
+                    //                             versionBData.isActive && (
+                    //                             <div className="text-muted-foreground italic">
+                    //                                 No changes to name,
+                    //                                 category, or active status.
+                    //                             </div>
+                    //                         )}
+                    //                 </div>
+                    //             </div>
 
-                                <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                                        Version Information
-                                    </h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div>
-                                            <span className="font-medium">
-                                                Version {versionA} created:
-                                            </span>{" "}
-                                            {new Date(
-                                                versionAData.createdAt
-                                            ).toLocaleString()}
-                                        </div>
-                                        <div>
-                                            <span className="font-medium">
-                                                Version {versionB} created:
-                                            </span>{" "}
-                                            {new Date(
-                                                versionBData.createdAt
-                                            ).toLocaleString()}
-                                        </div>
-                                        <div>
-                                            <span className="font-medium">
-                                                Time between versions:
-                                            </span>{" "}
-                                            {Math.round(
-                                                (new Date(
-                                                    versionBData.createdAt
-                                                ).getTime() -
-                                                    new Date(
-                                                        versionAData.createdAt
-                                                    ).getTime()) /
-                                                    (1000 * 60)
-                                            )}{" "}
-                                            minutes
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    //             <div>
+                    //                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    //                     Version Information
+                    //                 </h3>
+                    //                 <div className="space-y-2 text-sm">
+                    //                     <div>
+                    //                         <span className="font-medium">
+                    //                             Version {versionA} created:
+                    //                         </span>{" "}
+                    //                         {new Date(
+                    //                             versionAData.createdAt
+                    //                         ).toLocaleString()}
+                    //                     </div>
+                    //                     <div>
+                    //                         <span className="font-medium">
+                    //                             Version {versionB} created:
+                    //                         </span>{" "}
+                    //                         {new Date(
+                    //                             versionBData.createdAt
+                    //                         ).toLocaleString()}
+                    //                     </div>
+                    //                     <div>
+                    //                         <span className="font-medium">
+                    //                             Time between versions:
+                    //                         </span>{" "}
+                    //                         {Math.round(
+                    //                             (new Date(
+                    //                                 versionBData.createdAt
+                    //                             ).getTime() -
+                    //                                 new Date(
+                    //                                     versionAData.createdAt
+                    //                                 ).getTime()) /
+                    //                                 (1000 * 60)
+                    //                         )}{" "}
+                    //                         minutes
+                    //                     </div>
+                    //                 </div>
+                    //             </div>
+                    //         </div>
 
-                            {/* JSON Diff */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Description Changes
-                                </h3>
-                                {renderJsonDiff()}
-                            </div>
-                        </div>
-                    </div>
+                    //         {/* JSON Diff */}
+                    //         <div className="mt-6">
+                    //             <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    //                 Description Changes
+                    //             </h3>
+                    //             {renderJsonDiff()}
+                    //         </div>
+                    //     </div>
+                    // </div>
+
+                    <JsonBlockDiffViewer
+                        oldVersion={versionAData}
+                        newVersion={versionBData}
+                    />
                 )}
 
-                <div className="flex justify-end pt-2">
+                {/* <div className="flex justify-end pt-2">
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                     >
                         Close
                     </Button>
-                </div>
+                </div> */}
             </DialogContent>
         </Dialog>
     );

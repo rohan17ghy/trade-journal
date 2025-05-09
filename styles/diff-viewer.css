@@ -1,0 +1,70 @@
+/* src/styles/diff-viewer.css */
+.diff-container {
+    max-width: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.split-view {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.diff-view {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.line {
+    padding: 4px 8px;
+    border-bottom: 1px solid #333333;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.line:hover {
+    background: #2a2a2a;
+}
+
+.gutter {
+    background: #1a1a1a;
+    color: #a1a1aa;
+    padding: 4px 8px;
+    width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.content-text {
+    color: #d4d4d4;
+}
+
+.added {
+    background: #2ea043;
+}
+
+.removed {
+    background: #e53e3e;
+}
+
+.word-diff.added {
+    background: #22c55e;
+}
+
+.word-diff.removed {
+    background: #f87171;
+}
+
+/* Ensure Prism styles align with Vercel theme */
+pre {
+    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+}
