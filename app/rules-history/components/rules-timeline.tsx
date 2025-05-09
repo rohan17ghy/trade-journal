@@ -20,7 +20,10 @@ import {
     Filter,
     X,
     ChevronDown,
-    ChevronUp,
+    ChevronRight,
+    Check,
+    History,
+    Diff,
 } from "lucide-react";
 import { getRuleHistoryAction } from "../actions";
 import { getRulesAction } from "@/app/rules/actions";
@@ -33,12 +36,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { Rule } from "@prisma/client";
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { DescriptionDiffViewer } from "./description-diff-viewer";
+import type { Rule } from "@prisma/client";
 
 type RuleEvent = {
     id: string;
@@ -58,6 +62,13 @@ export function RulesTimeline() {
     const [expandedEvents, setExpandedEvents] = useState<Set<string>>(
         new Set()
     );
+    const [diffModalOpen, setDiffModalOpen] = useState(false);
+    const [diffVersions, setDiffVersions] = useState<{
+        ruleId: string;
+        versionA: number;
+        versionB: number;
+        ruleName: string;
+    } | null>(null);
 
     useEffect(() => {
         async function loadRuleHistory() {
@@ -69,7 +80,18 @@ export function RulesTimeline() {
                 ]);
 
                 if (historyResult.success && historyResult.data) {
-                    setEvents(historyResult.data);
+                    // Transform the data to ensure timestamps are Date objects
+                    const transformedEvents = historyResult.data.map(
+                        (event) => ({
+                            ...event,
+                            // Convert timestamp string to Date object if it's not already
+                            timestamp:
+                                event.timestamp instanceof Date
+                                    ? event.timestamp
+                                    : new Date(event.timestamp),
+                        })
+                    );
+                    setEvents(transformedEvents);
                 }
 
                 if (rulesResult.success && rulesResult.data) {
@@ -159,86 +181,366 @@ export function RulesTimeline() {
         });
     };
 
-    const renderDiffContent = (event: RuleEvent) => {
+    // Update the hasVersionDiff function to be more lenient
+    const hasVersionDiffForButton = (event: RuleEvent) => {
+        // Show the Compare button for any update event
+        return event.eventType === "updated";
+    };
+
+    // Update the handleViewVersionDiff function to handle missing version info
+    const handleViewVersionDiff = (event: RuleEvent) => {
+        // Default to version 1 if no previous version
+        const versionA = event.details?.versionInfo?.previousVersion || 1;
+        // Default to version 1 if no new version
+        const versionB = event.details?.versionInfo?.newVersion || versionA + 1;
+
+        console.log("Opening diff viewer for:", {
+            ruleId: event.ruleId,
+            versionA,
+            versionB,
+            ruleName: event.ruleName,
+        });
+
+        // Set the diffVersions state
+        setDiffVersions({
+            ruleId: event.ruleId,
+            versionA,
+            versionB,
+            ruleName: event.ruleName,
+        });
+
+        // Open the modal
+        setDiffModalOpen(true);
+    };
+
+    const renderChangeDetails = (event: RuleEvent) => {
         if (!event.details) return null;
 
-        const {
-            nameChanged,
-            categoryChanged,
-            descriptionChanged,
-            isActiveChanged,
-        } = event.details;
+        switch (event.eventType) {
+            case "created":
+                return (
+                    <div className="mt-2 text-sm">
+                        <h4 className="font-medium text-muted-foreground mb-1">
+                            Initial Values:
+                        </h4>
+                        <div className="space-y-1 pl-2">
+                            <div>
+                                <span className="font-medium">Name:</span>{" "}
+                                {event.details.initialValues?.name}
+                            </div>
+                            <div>
+                                <span className="font-medium">Category:</span>{" "}
+                                {event.details.initialValues?.category}
+                            </div>
+                            <div>
+                                <span className="font-medium">Active:</span>
+                                {event.details.initialValues?.isActive ? (
+                                    <span className="text-emerald-600 ml-1 inline-flex items-center">
+                                        <Check className="h-3 w-3 mr-1" /> Yes
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-600 ml-1 inline-flex items-center">
+                                        <X className="h-3 w-3 mr-1" /> No
+                                    </span>
+                                )}
+                            </div>
+                            {event.details.versionNumber && (
+                                <div>
+                                    <span className="font-medium">
+                                        Version:
+                                    </span>{" "}
+                                    {event.details.versionNumber}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
 
-        if (
-            !nameChanged &&
-            !categoryChanged &&
-            !descriptionChanged &&
-            !isActiveChanged
-        ) {
-            return (
-                <p className="text-sm text-muted-foreground">
-                    No significant changes detected.
-                </p>
-            );
+            case "updated":
+                return (
+                    <div className="mt-2 text-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-muted-foreground">
+                                Changes:
+                            </h4>
+                            {event.details.versionInfo && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => handleViewVersionDiff(event)}
+                                >
+                                    <Diff className="h-3.5 w-3.5 mr-1" />
+                                    View Detailed Changes
+                                </Button>
+                            )}
+                        </div>
+
+                        {event.details.name?.changed && (
+                            <div className="pl-2">
+                                <div className="font-medium">Name:</div>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                                        <div className="text-xs text-red-500 mb-0.5">
+                                            Previous
+                                        </div>
+                                        {event.details.name.from}
+                                    </div>
+                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                                        <div className="text-xs text-green-500 mb-0.5">
+                                            New
+                                        </div>
+                                        {event.details.name.to}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {event.details.category?.changed && (
+                            <div className="pl-2">
+                                <div className="font-medium">Category:</div>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                                        <div className="text-xs text-red-500 mb-0.5">
+                                            Previous
+                                        </div>
+                                        {event.details.category.from}
+                                    </div>
+                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                                        <div className="text-xs text-green-500 mb-0.5">
+                                            New
+                                        </div>
+                                        {event.details.category.to}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {event.details.isActive?.changed && (
+                            <div className="pl-2">
+                                <div className="font-medium">
+                                    Active Status:
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                                        <div className="text-xs text-red-500 mb-0.5">
+                                            Previous
+                                        </div>
+                                        {event.details.isActive.from ? (
+                                            <span className="inline-flex items-center">
+                                                <Check className="h-3 w-3 mr-1" />{" "}
+                                                Active
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center">
+                                                <X className="h-3 w-3 mr-1" />{" "}
+                                                Inactive
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                                        <div className="text-xs text-green-500 mb-0.5">
+                                            New
+                                        </div>
+                                        {event.details.isActive.to ? (
+                                            <span className="inline-flex items-center">
+                                                <Check className="h-3 w-3 mr-1" />{" "}
+                                                Active
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center">
+                                                <X className="h-3 w-3 mr-1" />{" "}
+                                                Inactive
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {event.details.description?.changed && (
+                            <div className="pl-2">
+                                <div className="font-medium">Description:</div>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                    <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                                        <div className="text-xs text-red-500 mb-0.5">
+                                            Previous
+                                        </div>
+                                        <div>
+                                            {
+                                                event.details.description
+                                                    .fromSummary?.blockCount
+                                            }{" "}
+                                            blocks
+                                            {event.details.description
+                                                .fromSummary?.textPreview && (
+                                                <div className="mt-1 text-xs italic">
+                                                    "
+                                                    {
+                                                        event.details
+                                                            .description
+                                                            .fromSummary
+                                                            .textPreview
+                                                    }
+                                                    "
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                                        <div className="text-xs text-green-500 mb-0.5">
+                                            New
+                                        </div>
+                                        <div>
+                                            {
+                                                event.details.description
+                                                    .toSummary?.blockCount
+                                            }{" "}
+                                            blocks
+                                            {event.details.description.toSummary
+                                                ?.textPreview && (
+                                                <div className="mt-1 text-xs italic">
+                                                    "
+                                                    {
+                                                        event.details
+                                                            .description
+                                                            .toSummary
+                                                            .textPreview
+                                                    }
+                                                    "
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {event.details.versionInfo && (
+                            <div className="pl-2 text-xs text-muted-foreground">
+                                Version changed from v
+                                {event.details.versionInfo.previousVersion} to v
+                                {event.details.versionInfo.newVersion}
+                            </div>
+                        )}
+
+                        {!event.details.name?.changed &&
+                            !event.details.category?.changed &&
+                            !event.details.description?.changed &&
+                            !event.details.isActive?.changed && (
+                                <div className="pl-2 text-muted-foreground italic">
+                                    No detailed change information available.
+                                </div>
+                            )}
+                    </div>
+                );
+
+            case "deleted":
+                return (
+                    <div className="mt-2 text-sm">
+                        <h4 className="font-medium text-muted-foreground mb-1">
+                            Final State:
+                        </h4>
+                        <div className="space-y-1 pl-2">
+                            <div>
+                                <span className="font-medium">Name:</span>{" "}
+                                {event.details.finalState?.name}
+                            </div>
+                            <div>
+                                <span className="font-medium">Category:</span>{" "}
+                                {event.details.finalState?.category}
+                            </div>
+                            <div>
+                                <span className="font-medium">Active:</span>
+                                {event.details.finalState?.isActive ? (
+                                    <span className="text-emerald-600 ml-1 inline-flex items-center">
+                                        <Check className="h-3 w-3 mr-1" /> Yes
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-600 ml-1 inline-flex items-center">
+                                        <X className="h-3 w-3 mr-1" /> No
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case "activated":
+            case "deactivated":
+                if (
+                    typeof event.details?.from !== "undefined" &&
+                    typeof event.details?.to !== "undefined"
+                ) {
+                    return (
+                        <div className="mt-2 text-sm">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
+                                    <div className="text-xs text-red-500 mb-0.5">
+                                        Previous
+                                    </div>
+                                    {event.details.from ? (
+                                        <span className="inline-flex items-center">
+                                            <Check className="h-3 w-3 mr-1" />{" "}
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center">
+                                            <X className="h-3 w-3 mr-1" />{" "}
+                                            Inactive
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="bg-green-50 p-1.5 rounded border border-green-100 text-green-800">
+                                    <div className="text-xs text-green-500 mb-0.5">
+                                        New
+                                    </div>
+                                    {event.details.to ? (
+                                        <span className="inline-flex items-center">
+                                            <Check className="h-3 w-3 mr-1" />{" "}
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center">
+                                            <X className="h-3 w-3 mr-1" />{" "}
+                                            Inactive
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            {event.details.versionNumber && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                    Version: v{event.details.versionNumber}
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+                return null;
+
+            default:
+                return null;
         }
+    };
 
+    const hasDetails = (event: RuleEvent) => {
         return (
-            <div className="space-y-3 pt-2">
-                {nameChanged && (
-                    <div className="space-y-1">
-                        <h4 className="text-xs font-medium text-muted-foreground">
-                            Name Changed
-                        </h4>
-                        <div className="bg-muted/50 p-2 rounded text-sm">
-                            <span className="font-medium">
-                                Updated rule name
-                            </span>
-                        </div>
-                    </div>
-                )}
+            event.details &&
+            (event.eventType === "created" ||
+                event.eventType === "updated" ||
+                event.eventType === "deleted" ||
+                (["activated", "deactivated"].includes(event.eventType) &&
+                    typeof event.details.from !== "undefined" &&
+                    typeof event.details.to !== "undefined"))
+        );
+    };
 
-                {categoryChanged && (
-                    <div className="space-y-1">
-                        <h4 className="text-xs font-medium text-muted-foreground">
-                            Category Changed
-                        </h4>
-                        <div className="bg-muted/50 p-2 rounded text-sm">
-                            <span className="font-medium">
-                                Updated rule category
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                {isActiveChanged && (
-                    <div className="space-y-1">
-                        <h4 className="text-xs font-medium text-muted-foreground">
-                            Active Status Changed
-                        </h4>
-                        <div className="bg-muted/50 p-2 rounded text-sm">
-                            <span className="font-medium">
-                                Rule was{" "}
-                                {event.eventType === "activated"
-                                    ? "activated"
-                                    : "deactivated"}
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                {descriptionChanged && (
-                    <div className="space-y-1">
-                        <h4 className="text-xs font-medium text-muted-foreground">
-                            Description Changed
-                        </h4>
-                        <div className="bg-muted/50 p-2 rounded text-sm">
-                            <span className="font-medium">
-                                Rule description was updated
-                            </span>
-                        </div>
-                    </div>
-                )}
-            </div>
+    const hasVersionDiff = (event: RuleEvent) => {
+        return (
+            event.eventType === "updated" &&
+            event.details?.versionInfo?.previousVersion &&
+            event.details?.versionInfo?.newVersion &&
+            event.details?.description?.changed
         );
     };
 
@@ -376,7 +678,7 @@ export function RulesTimeline() {
                                         <Collapsible
                                             open={expandedEvents.has(event.id)}
                                             onOpenChange={() =>
-                                                event.eventType === "updated" &&
+                                                hasDetails(event) &&
                                                 toggleEventExpanded(event.id)
                                             }
                                         >
@@ -401,39 +703,52 @@ export function RulesTimeline() {
                                                                 1
                                                             )}
                                                     </Badge>
+                                                    {event.category && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="ml-auto"
+                                                        >
+                                                            {event.category}
+                                                        </Badge>
+                                                    )}
 
-                                                    {event.eventType ===
-                                                        "updated" &&
-                                                        event.details && (
-                                                            <CollapsibleTrigger
-                                                                asChild
-                                                            >
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="ml-auto h-6 w-6 p-0"
-                                                                >
-                                                                    {expandedEvents.has(
-                                                                        event.id
-                                                                    ) ? (
-                                                                        <ChevronUp className="h-4 w-4" />
-                                                                    ) : (
-                                                                        <ChevronDown className="h-4 w-4" />
-                                                                    )}
-                                                                </Button>
-                                                            </CollapsibleTrigger>
-                                                        )}
+                                                    {hasVersionDiffForButton(
+                                                        event
+                                                    ) && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 ml-2"
+                                                            onClick={() =>
+                                                                handleViewVersionDiff(
+                                                                    event
+                                                                )
+                                                            }
+                                                        >
+                                                            <History className="h-3.5 w-3.5 mr-1" />
+                                                            Compare
+                                                        </Button>
+                                                    )}
 
-                                                    {event.category &&
-                                                        event.eventType !==
-                                                            "updated" && (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="ml-auto"
+                                                    {hasDetails(event) && (
+                                                        <CollapsibleTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 w-6 p-0 ml-1"
                                                             >
-                                                                {event.category}
-                                                            </Badge>
-                                                        )}
+                                                                {expandedEvents.has(
+                                                                    event.id
+                                                                ) ? (
+                                                                    <ChevronDown className="h-4 w-4" />
+                                                                ) : (
+                                                                    <ChevronRight className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </CollapsibleTrigger>
+                                                    )}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
                                                     {formatDistanceToNow(
@@ -445,17 +760,7 @@ export function RulesTimeline() {
                                                 </div>
 
                                                 <CollapsibleContent>
-                                                    {event.eventType ===
-                                                        "updated" && (
-                                                        <div className="mt-2 border-t pt-2 border-dashed border-muted">
-                                                            <div className="text-xs font-medium text-muted-foreground mb-1">
-                                                                Changes:
-                                                            </div>
-                                                            {renderDiffContent(
-                                                                event
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    {renderChangeDetails(event)}
                                                 </CollapsibleContent>
                                             </div>
                                         </Collapsible>
@@ -466,6 +771,16 @@ export function RulesTimeline() {
                     </Card>
                 ))
             )}
+
+            {/* Diff Viewer Modal */}
+            <DescriptionDiffViewer
+                ruleId={diffVersions?.ruleId || ""}
+                versionA={diffVersions?.versionA || 0}
+                versionB={diffVersions?.versionB || 0}
+                open={diffModalOpen && diffVersions !== null}
+                onOpenChange={setDiffModalOpen}
+                ruleName={diffVersions?.ruleName || ""}
+            />
         </div>
     );
 }

@@ -21,6 +21,21 @@ model Rule {
   performances RulePerformanceEntry[]
   tradeJournalEntries TradeJournalEntry[] // Relation to trade journal entries
   historyEvents RuleHistoryEvent[] // Relation to history events
+  versions     RuleVersion[]
+}
+
+model RuleVersion {
+  id            String    @id @default(cuid())
+  ruleId        String
+  versionNumber Int
+  name          String
+  description   Json
+  category      String
+  isActive      Boolean
+  createdAt     DateTime  @default(now())
+  rule          Rule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  
+  @@unique([ruleId, versionNumber])
 }
 
 model RuleHistoryEvent {

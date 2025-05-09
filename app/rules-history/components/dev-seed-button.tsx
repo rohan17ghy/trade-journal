@@ -2,60 +2,59 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Beaker } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 export function DevSeedButton() {
-    const [isSeeding, setIsSeeding] = useState(false);
-
-    // Only show in development
-    if (process.env.NODE_ENV !== "development") {
-        return null;
-    }
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSeed = async () => {
-        if (isSeeding) return;
+        if (isLoading) return;
 
-        if (
-            !confirm(
-                "This will clear existing rule history and generate new test data. Continue?"
-            )
-        ) {
-            return;
-        }
-
-        setIsSeeding(true);
-
+        setIsLoading(true);
         try {
-            const response = await fetch("/api/dev/seed-rule-history", {
-                method: "POST",
-            });
-
+            const response = await fetch("/api/dev/seed-rule-history");
             const data = await response.json();
 
             if (response.ok) {
-                toast.success("Rule history seeded successfully");
+                toast({
+                    title: "Success",
+                    description:
+                        "Rule history seeded successfully. Refresh the page to see the changes.",
+                });
             } else {
-                toast.error(`Failed to seed rule history: ${data.error}`);
+                toast({
+                    title: "Error",
+                    description: data.error || "Failed to seed rule history",
+                    variant: "destructive",
+                });
             }
         } catch (error) {
-            toast.error("An error occurred while seeding rule history");
-            console.error(error);
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred",
+                variant: "destructive",
+            });
         } finally {
-            setIsSeeding(false);
+            setIsLoading(false);
         }
     };
 
     return (
         <Button
+            onClick={handleSeed}
+            disabled={isLoading}
             variant="outline"
             size="sm"
-            onClick={handleSeed}
-            disabled={isSeeding}
-            className="gap-1 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
         >
-            <Beaker className="h-4 w-4" />
-            {isSeeding ? "Seeding..." : "Seed Test Data"}
+            {isLoading ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Seeding...
+                </>
+            ) : (
+                "Seed Rule History"
+            )}
         </Button>
     );
 }
