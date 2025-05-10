@@ -9,7 +9,8 @@ import { RulesSchema, type RuleFormFields } from "../zod/schema";
 async function recordRuleHistoryEvent(
     rule: Rule,
     eventType: string,
-    details?: any
+    details?: any,
+    customTimestamp?: Date //used to testing purpose only
 ) {
     try {
         await prisma.ruleHistoryEvent.create({
@@ -18,7 +19,7 @@ async function recordRuleHistoryEvent(
                 ruleName: rule.name,
                 eventType,
                 details: details || undefined,
-                timestamp: new Date(),
+                timestamp: customTimestamp || new Date(),
             },
         });
     } catch (error) {
@@ -231,40 +232,97 @@ export async function updateRuleAction(
     }
 }
 
-// Helper function to get a summary of the description content
-function getDescriptionSummary(description: any) {
-    try {
-        if (!description) return "Empty";
+// Interfaces for Notion-like data (aligned with provided Block interface)
+interface TextContent {
+    type: string;
+    text?: string;
+    marks?: { type: string }[];
+}
 
-        // If it's a string, try to parse it
-        const content =
+interface BlockAttrs {
+    level?: number;
+    [key: string]: any;
+}
+
+interface Block {
+    type: string;
+    content?: (TextContent | Block)[];
+    attrs?: BlockAttrs;
+}
+
+interface Description {
+    content?: Block[];
+}
+
+// Output interface for summary
+interface DescriptionSummary {
+    blockCount: number;
+    textPreview: string;
+}
+
+// Helper function to get a summary of the description content
+function getDescriptionSummary(description: unknown): DescriptionSummary {
+    try {
+        // Handle null/undefined/empty input
+        if (!description) {
+            return { blockCount: 0, textPreview: "Empty" };
+        }
+
+        // Parse string input to JSON, if necessary
+        const parsedDescription: Description =
             typeof description === "string"
                 ? JSON.parse(description)
                 : description;
 
-        // Count the number of blocks
-        const blockCount = content.content?.length || 0;
+        // Validate content structure
+        if (!parsedDescription || !Array.isArray(parsedDescription.content)) {
+            return { blockCount: 0, textPreview: "Invalid format" };
+        }
 
-        // Get the first few characters of text if available
+        // Count top-level blocks
+        const blockCount = parsedDescription.content.length;
+
+        // Recursively extract text from blocks
+        const extractText = (items: (TextContent | Block)[]): string => {
+            let text = "";
+            for (const item of items) {
+                if ("text" in item && item.text) {
+                    // Handle text content
+                    text += item.text + " ";
+                } else if ("content" in item && Array.isArray(item.content)) {
+                    // Handle nested blocks (e.g., list items, nested content)
+                    text += extractText(item.content) + " ";
+                }
+            }
+            return text.trim();
+        };
+
+        // Get text from all blocks, prioritizing headings and paragraphs
         let textPreview = "";
-        if (content.content && content.content.length > 0) {
-            // Try to extract text from the first paragraph
-            const firstBlock = content.content[0];
-            if (firstBlock.content) {
-                const textItems = firstBlock.content
-                    .filter((item: any) => item.type === "text")
-                    .map((item: any) => item.text);
-                textPreview = textItems.join(" ").substring(0, 50);
-                if (textItems.join(" ").length > 50) textPreview += "...";
+        const allBlocks = parsedDescription.content;
+        for (const block of allBlocks) {
+            if (
+                block.content &&
+                ["heading", "paragraph", "listItem"].includes(block.type)
+            ) {
+                const blockText = extractText(block.content);
+                textPreview += blockText + " ";
+                if (textPreview.length >= 50) break; // Stop once we have enough text
             }
         }
 
-        return {
-            blockCount,
-            textPreview,
-        };
+        // Trim and limit preview to 50 characters
+        textPreview = textPreview.trim();
+        if (textPreview.length === 0) {
+            textPreview = blockCount > 0 ? "No text content" : "Empty";
+        } else if (textPreview.length > 50) {
+            textPreview = textPreview.substring(0, 50) + "...";
+        }
+
+        return { blockCount, textPreview };
     } catch (e) {
-        return "Invalid format";
+        console.warn("Failed to parse description:", e);
+        return { blockCount: 0, textPreview: "Invalid format" };
     }
 }
 

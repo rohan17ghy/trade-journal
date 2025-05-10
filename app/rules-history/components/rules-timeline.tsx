@@ -22,7 +22,6 @@ import {
     ChevronDown,
     ChevronRight,
     Check,
-    History,
     Diff,
 } from "lucide-react";
 import { getRuleHistoryAction } from "../actions";
@@ -181,12 +180,6 @@ export function RulesTimeline() {
         });
     };
 
-    // Update the hasVersionDiff function to be more lenient
-    const hasVersionDiffForButton = (event: RuleEvent) => {
-        // Show the Compare button for any update event
-        return event.eventType === "updated";
-    };
-
     // Update the handleViewVersionDiff function to handle missing version info
     const handleViewVersionDiff = (event: RuleEvent) => {
         // Default to version 1 if no previous version
@@ -259,22 +252,9 @@ export function RulesTimeline() {
             case "updated":
                 return (
                     <div className="mt-2 text-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-muted-foreground">
-                                Changes:
-                            </h4>
-                            {event.details.versionInfo && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs"
-                                    onClick={() => handleViewVersionDiff(event)}
-                                >
-                                    <Diff className="h-3.5 w-3.5 mr-1" />
-                                    View Detailed Changes
-                                </Button>
-                            )}
-                        </div>
+                        <h4 className="font-medium text-muted-foreground">
+                            Changes:
+                        </h4>
 
                         {event.details.name?.changed && (
                             <div className="pl-2">
@@ -360,7 +340,24 @@ export function RulesTimeline() {
 
                         {event.details.description?.changed && (
                             <div className="pl-2">
-                                <div className="font-medium">Description:</div>
+                                <div className="flex items-center justify-between">
+                                    <div className="font-medium">
+                                        Description:
+                                    </div>
+                                    {event.details.versionInfo && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            onClick={() =>
+                                                handleViewVersionDiff(event)
+                                            }
+                                        >
+                                            <Diff className="h-3.5 w-3.5 mr-1" />
+                                            View Detailed Changes
+                                        </Button>
+                                    )}
+                                </div>
                                 <div className="grid grid-cols-2 gap-2 mt-1">
                                     <div className="bg-red-50 p-1.5 rounded border border-red-100 text-red-800">
                                         <div className="text-xs text-red-500 mb-0.5">
@@ -535,15 +532,6 @@ export function RulesTimeline() {
         );
     };
 
-    const hasVersionDiff = (event: RuleEvent) => {
-        return (
-            event.eventType === "updated" &&
-            event.details?.versionInfo?.previousVersion &&
-            event.details?.versionInfo?.newVersion &&
-            event.details?.description?.changed
-        );
-    };
-
     if (loading) {
         return (
             <div className="space-y-4">
@@ -710,24 +698,6 @@ export function RulesTimeline() {
                                                         >
                                                             {event.category}
                                                         </Badge>
-                                                    )}
-
-                                                    {hasVersionDiffForButton(
-                                                        event
-                                                    ) && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 ml-2"
-                                                            onClick={() =>
-                                                                handleViewVersionDiff(
-                                                                    event
-                                                                )
-                                                            }
-                                                        >
-                                                            <History className="h-3.5 w-3.5 mr-1" />
-                                                            Compare
-                                                        </Button>
                                                     )}
 
                                                     {hasDetails(event) && (

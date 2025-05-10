@@ -1,7 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RulesTimeline } from "./components/rules-timeline";
 import { RulesActivityHistory } from "./components/rules-activity-history";
-import { DevSeedButton } from "./components/dev-seed-button";
 
 export default function RulesHistoryPage() {
     return (
@@ -17,9 +16,6 @@ export default function RulesHistoryPage() {
                             over time
                         </p>
                     </div>
-
-                    {/* Add the DevSeedButton here */}
-                    <DevSeedButton />
                 </div>
 
                 <Tabs defaultValue="timeline" className="w-full">

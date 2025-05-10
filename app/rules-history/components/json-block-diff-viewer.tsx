@@ -124,9 +124,6 @@ const JsonBlockDiffViewer: React.FC<JsonBlockDiffViewerProps> = ({
     const oldText: string = convertBlocksToText(oldVersion.description.content);
     const newText: string = convertBlocksToText(newVersion.description.content);
 
-    console.log(oldText);
-    console.log(newText);
-
     // Syntax highlighting function with tag cleanup
     const highlightSyntax = (str: string): ReactElement => {
         const style = {
