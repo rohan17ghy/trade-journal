@@ -1,8 +1,26 @@
 /* src/styles/diff-viewer.css */
+.diff-viewer-container {
+    padding: 24px;
+    background: #111827;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    max-width: 100%;
+    overflow: auto;
+    margin: 16px 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
 .diff-container {
     max-width: 100%;
     overflow: auto;
     box-sizing: border-box;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 12px;
+    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .split-view {
@@ -22,49 +40,138 @@
 }
 
 .line {
-    padding: 4px 8px;
-    border-bottom: 1px solid #333333;
+    padding: 6px 12px;
+    border-bottom: 1px solid #374151;
     white-space: pre-wrap;
     word-break: break-word;
+    transition: background-color 0.2s ease;
 }
 
 .line:hover {
-    background: #2a2a2a;
+    background: #374151;
 }
 
 .gutter {
-    background: #1a1a1a;
-    color: #a1a1aa;
-    padding: 4px 8px;
-    width: 40px;
+    background: #111827;
+    color: #9ca3af;
+    padding: 6px 12px;
+    width: 48px;
     text-align: right;
     flex-shrink: 0;
+    border-right: 1px solid #374151;
 }
 
 .content-text {
-    color: #d4d4d4;
+    color: #e5e7eb;
+    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
 }
 
 .added {
-    background: #2ea043;
+    background: #059669;
+    color: #f3f4f6;
 }
 
 .removed {
-    background: #e53e3e;
+    background: #dc2626;
+    color: #f3f4f6;
 }
 
 .word-diff.added {
-    background: #22c55e;
+    background: #10b981;
 }
 
 .word-diff.removed {
-    background: #f87171;
+    background: #ef4444;
 }
 
-/* Ensure Prism styles align with Vercel theme */
-pre {
+.code-fold {
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.marker {
+    padding: 6px 12px;
+}
+
+/* Dark theme variables */
+:root {
+    --diff-viewer-background: #1f2937;
+    --diff-viewer-color: #e5e7eb;
+    --added-background: #059669;
+    --added-color: #f3f4f6;
+    --removed-background: #dc2626;
+    --removed-color: #f3f4f6;
+    --word-added-background: #10b981;
+    --word-removed-background: #ef4444;
+    --added-gutter-background: #064e3b;
+    --removed-gutter-background: #7f1d1d;
+    --gutter-background: #111827;
+    --highlight-background: #374151;
+    --empty-line-background: #1f2937;
+}
+
+/* Light theme variables */
+@media (prefers-color-scheme: light) {
+    :root {
+        --diff-viewer-background: #ffffff;
+        --diff-viewer-color: #1f2937;
+        --added-background: #059669;
+        --added-color: #111827;
+        --removed-background: #dc2626;
+        --removed-color: #111827;
+        --word-added-background: #10b981;
+        --word-removed-background: #ef4444;
+        --added-gutter-background: #d1fae5;
+        --removed-gutter-background: #fee2e2;
+        --gutter-background: #f3f4f6;
+        --highlight-background: #eff6ff;
+        --empty-line-background: #ffffff;
+    }
+
+    .diff-viewer-container {
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .diff-container {
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+    }
+
+    .gutter {
+        background: #f3f4f6;
+        color: #6b7280;
+        border-right: 1px solid #d1d5db;
+    }
+
+    .line {
+        border-bottom: 1px solid #d1d5db;
+    }
+
+    .line:hover {
+        background: #eff6ff;
+    }
+
+    .content-text {
+        color: #1f2937;
+    }
+
+    .code-fold {
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+    }
+}
+
+/* Remove default Prism styles to avoid conflicts */
+pre,
+code {
     font-family: ui-monospace, Menlo, Monaco, Consolas, monospace !important;
-    font-size: 13px !important;
-    color: #ffffff !important;
+    font-size: 14px !important;
     margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
 }

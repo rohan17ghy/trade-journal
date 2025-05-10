@@ -2,7 +2,7 @@ import React, { ReactElement } from "react";
 import ReactDiffViewer, { DiffMethod } from "react-diff-viewer-continued";
 import Prism from "prismjs";
 import "prismjs/themes/prism.css";
-import "@/styles/diff-viewer.css"; // Custom CSS to fix overflow and enhance Vercel theme
+import "@/styles/diff-viewer.css"; // Updated CSS for enhanced styling
 
 // Interface for text content with optional marks (e.g., bold, italic)
 interface TextContent {
@@ -60,14 +60,12 @@ const convertBlocksToText = (blocks: Block[] | undefined): string => {
         return content
             .map((item) => {
                 if ("text" in item && item.text) {
-                    // Handle text content with optional marks
                     const marks = item.marks?.map((mark) => mark.type) || [];
                     let text = item.text;
                     if (marks.includes("bold")) text = `**${text}**`;
                     if (marks.includes("italic")) text = `*${text}*`;
                     return text;
                 } else if ("type" in item && "content" in item) {
-                    // Handle nested blocks (e.g., list items)
                     switch (item.type) {
                         case "listItem":
                             return processContent(item.content);
@@ -126,28 +124,31 @@ const JsonBlockDiffViewer: React.FC<JsonBlockDiffViewerProps> = ({
     const oldText: string = convertBlocksToText(oldVersion.description.content);
     const newText: string = convertBlocksToText(newVersion.description.content);
 
-    // Syntax highlighting function with error handling
+    console.log(oldText);
+    console.log(newText);
+
+    // Syntax highlighting function with tag cleanup
     const highlightSyntax = (str: string): ReactElement => {
         const style = {
             display: "inline",
             fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace",
-            fontSize: "13px",
-            color: "#ffffff",
+            fontSize: "14px",
         };
 
-        // Check if Prism.languages.plaintext is available
         if (Prism.languages.plaintext) {
             try {
+                // Highlight text and clean up unnecessary tags
+                let highlighted = Prism.highlight(
+                    str,
+                    Prism.languages.plaintext,
+                    "plaintext"
+                );
+                // Remove <pre> and <span> tags but preserve content
+                highlighted = highlighted.replace(/<\/?(pre|span)[^>]*>/g, "");
                 return (
-                    <pre
+                    <div
                         style={style}
-                        dangerouslySetInnerHTML={{
-                            __html: Prism.highlight(
-                                str,
-                                Prism.languages.plaintext,
-                                "plaintext"
-                            ),
-                        }}
+                        dangerouslySetInnerHTML={{ __html: highlighted }}
                     />
                 );
             } catch (e) {
@@ -156,90 +157,20 @@ const JsonBlockDiffViewer: React.FC<JsonBlockDiffViewerProps> = ({
         }
 
         // Fallback to raw text if highlighting fails
-        return <pre style={style}>{str}</pre>;
+        return <div style={style}>{str}</div>;
     };
 
-    // Custom styles to match Vercel theme
+    // Minimal inline styles, relying on diff-viewer.css
     const customStyles: DiffViewerStyles = {
-        variables: {
-            dark: {
-                diffViewerBackground: "#111111",
-                diffViewerColor: "#d4d4d4",
-                addedBackground: "#2ea043",
-                addedColor: "#ffffff",
-                removedBackground: "#e53e3e",
-                removedColor: "#ffffff",
-                wordAddedBackground: "#22c55e",
-                wordRemovedBackground: "#f87171",
-                addedGutterBackground: "#1f2a44",
-                removedGutterBackground: "#4b1f2a",
-                gutterBackground: "#1a1a1a",
-                gutterBackgroundDark: "#1a1a1a",
-                highlightBackground: "#2a2a2a",
-                highlightGutterBackground: "#2a2a2a",
-                codeFoldBackground: "#1a1a1a",
-                emptyLineBackground: "#111111",
-            },
-            light: {
-                diffViewerBackground: "#ffffff",
-                diffViewerColor: "#000000",
-                addedBackground: "#2ea043",
-                addedColor: "#000000",
-                removedBackground: "#e53e3e",
-                removedColor: "#000000",
-                wordAddedBackground: "#22c55e",
-                wordRemovedBackground: "#f87171",
-                addedGutterBackground: "#e6ffed",
-                removedGutterBackground: "#ffeef0",
-                gutterBackground: "#f7f7f7",
-                gutterBackgroundDark: "#e0e0e0",
-                highlightBackground: "#f0f8ff",
-                highlightGutterBackground: "#f0f8ff",
-                codeFoldBackground: "#f7f7f7",
-                emptyLineBackground: "#ffffff",
-            },
-        },
         diffContainer: {
-            background: "#111111",
-            border: "1px solid #333333",
-            borderRadius: "8px",
-            fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace",
-            fontSize: "13px",
-            lineHeight: "1.5",
+            borderRadius: "12px",
             maxWidth: "100%",
-            overflow: "auto",
-        },
-        line: {
-            padding: "4px 8px",
-            borderBottom: "1px solid #333333",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-        },
-        contentText: {
-            fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace",
-            fontSize: "13px",
-            color: "#d4d4d4",
-        },
-        gutter: {
-            background: "#1a1a1a",
-            color: "#a1a1aa",
-            padding: "4px 8px",
-            width: "40px",
-            textAlign: "right",
+            overflowX: "auto",
         },
     };
 
     return (
-        <div
-            style={{
-                padding: "16px",
-                background: "#000000",
-                borderRadius: "8px",
-                border: "1px solid #333333",
-                maxWidth: "100%",
-                overflow: "auto",
-            }}
-        >
+        <div className="diff-viewer-container">
             <ReactDiffViewer
                 oldValue={oldText}
                 newValue={newText}
