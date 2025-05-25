@@ -167,31 +167,26 @@ export function TrendEventForm() {
                             />
                         </div>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="eventType">Event Type</Label>
-                        <Select
-                            value={eventType}
-                            onValueChange={(value) =>
-                                setEventType(value as TrendEventType)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select event type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="successful_reversal">
-                                    Successful Reversal
-                                </SelectItem>
-                                <SelectItem value="failed_reversal">
-                                    Failed Reversal
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
 
                 <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="rule">Related Rule (Optional)</Label>
+                        <Select value={ruleId} onValueChange={setRuleId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a rule" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {rules.map((rule) => (
+                                    <SelectItem key={rule.id} value={rule.id}>
+                                        {rule.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="direction">
                             Direction After Reversal (Optional)
@@ -216,34 +211,39 @@ export function TrendEventForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="rule">Related Rule (Optional)</Label>
-                        <Select value={ruleId} onValueChange={setRuleId}>
+                        <Label htmlFor="eventType">Event Type</Label>
+                        <Select
+                            value={eventType}
+                            onValueChange={(value) =>
+                                setEventType(value as TrendEventType)
+                            }
+                        >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select a rule" />
+                                <SelectValue placeholder="Select event type" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                {rules.map((rule) => (
-                                    <SelectItem key={rule.id} value={rule.id}>
-                                        {rule.name}
-                                    </SelectItem>
-                                ))}
+                                <SelectItem value="successful_reversal">
+                                    Successful Reversal
+                                </SelectItem>
+                                <SelectItem value="failed_reversal">
+                                    Failed Reversal
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Describe the trend event, what happened, and why it's significant..."
-                            rows={4}
-                            required
-                        />
-                    </div>
                 </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe the trend event, what happened, and why it's significant..."
+                    rows={4}
+                    required
+                />
             </div>
 
             <Button type="submit" disabled={isSubmitting}>
