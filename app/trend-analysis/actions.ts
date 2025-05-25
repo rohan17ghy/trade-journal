@@ -22,9 +22,18 @@ export async function getTrendEventsAction(): Promise<
             },
         });
 
+        // Parse the JSON content for each trend event
+        const parsedTrendEvents = trendEvents.map((event) => ({
+            ...event,
+            description:
+                typeof event.description === "string"
+                    ? JSON.parse(event.description)
+                    : event.description,
+        }));
+
         return {
             success: true,
-            data: trendEvents,
+            data: parsedTrendEvents,
         };
     } catch (error) {
         console.error("Failed to get trend events:", error);
@@ -64,9 +73,18 @@ export async function getTrendEventsByMonthAction(
             },
         });
 
+        // Parse the JSON content for each trend event
+        const parsedTrendEvents = trendEvents.map((event) => ({
+            ...event,
+            description:
+                typeof event.description === "string"
+                    ? JSON.parse(event.description)
+                    : event.description,
+        }));
+
         return {
             success: true,
-            data: trendEvents,
+            data: parsedTrendEvents,
         };
     } catch (error) {
         console.error("Failed to get trend events by month:", error);

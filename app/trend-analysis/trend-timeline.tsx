@@ -63,6 +63,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import RenderJsonContent from "@/components/render-json-content";
 
 const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
@@ -568,11 +569,19 @@ export function TrendTimeline() {
                                                 <CollapsibleContent>
                                                     <div className="mt-2 space-y-3 pl-2">
                                                         <div className="text-sm">
-                                                            <p>
-                                                                {
-                                                                    event.description
-                                                                }
-                                                            </p>
+                                                            {event.description ? (
+                                                                <RenderJsonContent
+                                                                    content={
+                                                                        event.description
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    No
+                                                                    description
+                                                                    available
+                                                                </p>
+                                                            )}
                                                         </div>
 
                                                         {event.direction && (

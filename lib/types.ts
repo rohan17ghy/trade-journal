@@ -1,3 +1,5 @@
+import type { JSONContent } from "@tiptap/react";
+
 export interface ActionResult<T = any> {
     success: boolean;
     data?: T;
@@ -58,7 +60,7 @@ export interface TrendEvent {
     time?: string | null; // Time at which reversal or failed reversal happened
     title?: string | null; // Title for the trend event
     eventType: string;
-    description: string;
+    description: JSONContent; // JSON content (Novel JSONContent)
     symbol: string;
     direction: string | null;
     ruleId: string | null;

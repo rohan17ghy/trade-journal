@@ -24,4 +24,34 @@ export const RulesSchema = z.object({
     isActive: z.boolean().default(false),
 });
 
-export type RuleFormFields = z.infer<typeof RulesSchema>;
+export const TrendDirectionEnum = z.enum(["uptrend", "downtrend", "none"]);
+export const TrendEventTypeEnum = z.enum([
+    "successful_reversal",
+    "failed_reversal",
+]);
+
+// JSON Content schema for the editor
+// export const JSONContentSchema = z
+//   .object({
+//     type: z.string().optional(),
+//     content: z.array(z.any()).optional(),
+//   })
+//   .passthrough()
+
+export const TrendEventSchema = z.object({
+    title: z
+        .string()
+        .min(1, "Title is required")
+        .max(100, "Title must be less than 100 characters"),
+    date: z.date({
+        required_error: "Date is required",
+        invalid_type_error: "Date is required",
+    }),
+    time: z.string().min(1, "Time is required"),
+    eventType: TrendEventTypeEnum,
+    description: JSONContentSchema,
+    direction: TrendDirectionEnum.optional(),
+    ruleId: z.string().optional(),
+});
+
+export type TrendEventFormFields = z.infer<typeof TrendEventSchema>;

@@ -25,6 +25,7 @@ import type { TrendEventWithRule } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import type { DayContentProps } from "react-day-picker";
+import RenderJsonContent from "@/components/render-json-content";
 
 const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
@@ -643,9 +644,20 @@ export function TrendCalendar() {
                                                         </span>
                                                     </div>
                                                 )}
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {event.description}
-                                                </p>
+                                                <div className="mt-1 text-sm">
+                                                    {event.description ? (
+                                                        <RenderJsonContent
+                                                            content={
+                                                                event.description
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            No description
+                                                            available
+                                                        </p>
+                                                    )}
+                                                </div>
                                                 {event.direction && (
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         Direction:{" "}

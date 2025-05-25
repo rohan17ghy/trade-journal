@@ -1,14 +1,15 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createTrendEventAction, getRulesAction } from "./actions";
+import { useEffect, useState } from "react";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon, Clock, Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -22,36 +23,56 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import TailwindAdvancedEditor from "@/components/editor/advanced-editor";
+
+import { createTrendEventAction, getRulesAction } from "./actions";
+import {
+    TrendEventSchema,
+    JSONContentSchema,
+    type TrendEventFormFields,
+} from "@/app/zod/schema";
 import type { Rule } from "@prisma/client";
-import type { TrendDirection, TrendEventType } from "@/lib/types";
 
 const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
-export function TrendEventForm() {
+interface TrendEventFormProps {
+    onSuccess?: () => void;
+}
+
+export function TrendEventForm({ onSuccess }: TrendEventFormProps) {
     const router = useRouter();
-    const [date, setDate] = useState<Date | undefined>(new Date());
-    const [title, setTitle] = useState("");
-    const [time, setTime] = useState("");
-    const [eventType, setEventType] = useState<TrendEventType>(
-        "successful_reversal"
-    );
-    const [description, setDescription] = useState("");
-    const [direction, setDirection] = useState<TrendDirection | "">("");
-    const [ruleId, setRuleId] = useState("");
     const [rules, setRules] = useState<Rule[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        reset,
+        setError,
+        formState: { errors, isSubmitting },
+    } = useForm<TrendEventFormFields>({
+        resolver: zodResolver(TrendEventSchema),
+        defaultValues: {
+            title: "",
+            date: new Date(),
+            time: "",
+            eventType: "successful_reversal",
+            description: { type: "doc", content: [] },
+            direction: "none",
+            ruleId: "none",
+        },
+    });
 
     // Set default time to current time when component mounts
     useEffect(() => {
         const now = new Date();
         const hours = now.getHours().toString().padStart(2, "0");
         const minutes = now.getMinutes().toString().padStart(2, "0");
-        setTime(`${hours}:${minutes}`);
-    }, []);
+        setValue("time", `${hours}:${minutes}`);
+    }, [setValue]);
 
     useEffect(() => {
         async function loadRules() {
@@ -71,87 +92,109 @@ export function TrendEventForm() {
         loadRules();
     }, []);
 
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!date || !eventType || !description) {
-            return;
-        }
-
-        setIsSubmitting(true);
+    const onSubmit: SubmitHandler<TrendEventFormFields> = async (data) => {
         try {
             const formData = new FormData();
-            formData.append("date", date.toISOString());
-            formData.append("title", title);
-            formData.append("time", time);
-            formData.append("eventType", eventType);
-            formData.append("description", description);
+            formData.append("date", data.date.toISOString());
+            formData.append("title", data.title);
+            formData.append("time", data.time);
+            formData.append("eventType", data.eventType);
+            formData.append("description", JSON.stringify(data.description));
             formData.append("symbol", DEFAULT_INSTRUMENT);
-            if (direction) formData.append("direction", direction);
-            if (ruleId) formData.append("ruleId", ruleId);
+            if (data.direction && data.direction !== "none")
+                formData.append("direction", data.direction);
+            if (data.ruleId && data.ruleId !== "none")
+                formData.append("ruleId", data.ruleId);
 
             const result = await createTrendEventAction(formData);
             if (result.success) {
                 // Reset form
-                setDate(new Date());
-                setTitle("");
-                // Don't reset time - keep the current time
-                setEventType("successful_reversal");
-                setDescription("");
-                setDirection("");
-                setRuleId("");
+                reset({
+                    title: "",
+                    date: new Date(),
+                    // Keep the current time
+                    time: data.time,
+                    eventType: "successful_reversal",
+                    description: { type: "doc", content: [] },
+                    direction: "none",
+                    ruleId: "none",
+                });
+
+                if (onSuccess) {
+                    onSuccess();
+                }
 
                 // Refresh the page
                 router.refresh();
+            } else {
+                setError("root", {
+                    message: result.error || "Failed to create trend event",
+                });
             }
         } catch (error) {
             console.error("Failed to create trend event:", error);
-        } finally {
-            setIsSubmitting(false);
+            setError("root", { message: "An unexpected error occurred" });
         }
-    }
+    };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="title">Title</Label>
                         <Input
                             id="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            {...register("title")}
                             placeholder="Enter a title for this trend event"
                         />
+                        {errors.title && (
+                            <p className="text-sm text-red-500">
+                                {errors.title.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="date">Date</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !date && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? (
-                                        format(date, "PPP")
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={setDate}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
+                        <Controller
+                            name="date"
+                            control={control}
+                            render={({ field }) => (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !field.value &&
+                                                    "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {field.value ? (
+                                                format(field.value, "PPP")
+                                            ) : (
+                                                <span>Pick a date</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                        />
+                        {errors.date && (
+                            <p className="text-sm text-red-500">
+                                {errors.date.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -161,90 +204,159 @@ export function TrendEventForm() {
                             <Input
                                 id="time"
                                 type="time"
-                                value={time}
-                                onChange={(e) => setTime(e.target.value)}
+                                {...register("time")}
                                 className="flex-1"
                             />
                         </div>
+                        {errors.time && (
+                            <p className="text-sm text-red-500">
+                                {errors.time.message}
+                            </p>
+                        )}
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="rule">Related Rule (Optional)</Label>
-                        <Select value={ruleId} onValueChange={setRuleId}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a rule" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                {rules.map((rule) => (
-                                    <SelectItem key={rule.id} value={rule.id}>
-                                        {rule.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            name="ruleId"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a rule" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            None
+                                        </SelectItem>
+                                        {rules.map((rule) => (
+                                            <SelectItem
+                                                key={rule.id}
+                                                value={rule.id}
+                                            >
+                                                {rule.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                        {errors.ruleId && (
+                            <p className="text-sm text-red-500">
+                                {errors.ruleId.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="direction">
                             Direction After Reversal (Optional)
                         </Label>
-                        <Select
-                            value={direction}
-                            onValueChange={(value) =>
-                                setDirection(value as TrendDirection)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select direction" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                <SelectItem value="uptrend">Uptrend</SelectItem>
-                                <SelectItem value="downtrend">
-                                    Downtrend
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            name="direction"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select direction" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            None
+                                        </SelectItem>
+                                        <SelectItem value="uptrend">
+                                            Uptrend
+                                        </SelectItem>
+                                        <SelectItem value="downtrend">
+                                            Downtrend
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                        {errors.direction && (
+                            <p className="text-sm text-red-500">
+                                {errors.direction.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="eventType">Event Type</Label>
-                        <Select
-                            value={eventType}
-                            onValueChange={(value) =>
-                                setEventType(value as TrendEventType)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select event type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="successful_reversal">
-                                    Successful Reversal
-                                </SelectItem>
-                                <SelectItem value="failed_reversal">
-                                    Failed Reversal
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            name="eventType"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    value={field.value}
+                                    onValueChange={
+                                        field.onChange as (
+                                            value: string
+                                        ) => void
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select event type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="successful_reversal">
+                                            Successful Reversal
+                                        </SelectItem>
+                                        <SelectItem value="failed_reversal">
+                                            Failed Reversal
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                        {errors.eventType && (
+                            <p className="text-sm text-red-500">
+                                {errors.eventType.message}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the trend event, what happened, and why it's significant..."
-                    rows={4}
-                    required
+                <Controller
+                    name="description"
+                    control={control}
+                    render={({ field }) => {
+                        const parsedDesc = JSONContentSchema.safeParse(
+                            field.value
+                        );
+
+                        return (
+                            <TailwindAdvancedEditor
+                                {...(parsedDesc.success && {
+                                    initialContent: parsedDesc.data,
+                                })}
+                                onChange={field.onChange}
+                            />
+                        );
+                    }}
                 />
+                {errors.description && (
+                    <p className="text-sm text-red-500">
+                        {(errors.description?.message as string) ||
+                            "Description is required"}
+                    </p>
+                )}
             </div>
+
+            {errors.root && (
+                <p className="text-sm text-red-500">{errors.root.message}</p>
+            )}
 
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (

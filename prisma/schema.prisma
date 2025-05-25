@@ -120,7 +120,7 @@ model TrendEvent {
   time        String?   // Time at which reversal or failed reversal happened
   title       String?   // Title for the trend event
   eventType   String   // "successful_reversal" or "failed_reversal"
-  description String
+  description Json     @default("{\"type\": \"doc\", \"content\": []}") // Novel JSONContent
   symbol      String
   direction   String?  // "uptrend" or "downtrend" - the direction after the reversal
   ruleId      String?

@@ -43,12 +43,30 @@ function getEventTitle(
     }
 }
 
+// Helper function to convert plain text to JSON content format
+function textToJsonContent(text: string) {
+    return {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: text,
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 interface TrendEvent {
     date: Date;
     time: string;
     title: string;
     eventType: string;
-    description: string;
+    description: any; // JSON content
     symbol: string;
     direction: string;
     ruleId: string;
@@ -144,10 +162,11 @@ async function main() {
             const firstTitle = `Morning ${
                 firstDirection === "uptrend" ? "Bullish" : "Bearish"
             } Reversal`;
-            const firstDescription =
+            const firstDescription = textToJsonContent(
                 firstDirection === "uptrend"
                     ? "Morning session: Strong buying pressure broke through resistance"
-                    : "Morning session: Selling pressure broke through support";
+                    : "Morning session: Selling pressure broke through support"
+            );
 
             events.push({
                 date: currentDate,
@@ -171,10 +190,11 @@ async function main() {
             const secondTitle = `Afternoon ${
                 secondDirection === "uptrend" ? "Bullish" : "Bearish"
             } Reversal`;
-            const secondDescription =
+            const secondDescription = textToJsonContent(
                 secondDirection === "uptrend"
                     ? "Afternoon session: Market reversed again, breaking back above resistance"
-                    : "Afternoon session: Market reversed again, breaking back below support";
+                    : "Afternoon session: Market reversed again, breaking back below support"
+            );
 
             events.push({
                 date: currentDate,
@@ -201,22 +221,26 @@ async function main() {
             const time = getRandomTime();
             const title = getEventTitle(eventType, direction, currentTrend);
 
-            let description: string;
+            let description: any;
             if (eventType === "successful_reversal") {
                 if (direction === "uptrend") {
-                    description =
-                        "Price broke through resistance with strong momentum and volume";
+                    description = textToJsonContent(
+                        "Price broke through resistance with strong momentum and volume"
+                    );
                 } else {
-                    description =
-                        "Price broke through support with increasing selling pressure";
+                    description = textToJsonContent(
+                        "Price broke through support with increasing selling pressure"
+                    );
                 }
             } else {
                 if (currentTrend === "bearish") {
-                    description =
-                        "Price attempted to break resistance but failed and continued downward";
+                    description = textToJsonContent(
+                        "Price attempted to break resistance but failed and continued downward"
+                    );
                 } else {
-                    description =
-                        "Price tested support but failed to break through and bounced back up";
+                    description = textToJsonContent(
+                        "Price tested support but failed to break through and bounced back up"
+                    );
                 }
             }
 
@@ -271,22 +295,26 @@ async function main() {
                     currentTrend
                 );
 
-                let secondDescription: string;
+                let secondDescription: any;
                 if (secondEventType === "successful_reversal") {
                     if (secondDirection === "uptrend") {
-                        secondDescription =
-                            "Later in the day: Price reversed and broke through resistance";
+                        secondDescription = textToJsonContent(
+                            "Later in the day: Price reversed and broke through resistance"
+                        );
                     } else {
-                        secondDescription =
-                            "Later in the day: Price reversed and broke through support";
+                        secondDescription = textToJsonContent(
+                            "Later in the day: Price reversed and broke through support"
+                        );
                     }
                 } else {
                     if (currentTrend === "bearish") {
-                        secondDescription =
-                            "Later in the day: Second attempt to break resistance failed";
+                        secondDescription = textToJsonContent(
+                            "Later in the day: Second attempt to break resistance failed"
+                        );
                     } else {
-                        secondDescription =
-                            "Later in the day: Second attempt to break support failed";
+                        secondDescription = textToJsonContent(
+                            "Later in the day: Second attempt to break support failed"
+                        );
                     }
                 }
 
