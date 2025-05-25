@@ -3,9 +3,16 @@ import type {
     RulePerformanceEntry,
     TradeJournalEntry,
     DailyJournal,
+    TrendEvent,
 } from "@prisma/client";
 
-export type { Rule, RulePerformanceEntry, TradeJournalEntry, DailyJournal };
+export type {
+    Rule,
+    RulePerformanceEntry,
+    TradeJournalEntry,
+    DailyJournal,
+    TrendEvent,
+};
 
 export type RuleWithPerformances = Rule & {
     performances: RulePerformanceEntry[];
@@ -21,6 +28,10 @@ export type TradeJournalEntryWithRules = TradeJournalEntry & {
 
 export type DailyJournalWithTrades = DailyJournal & {
     trades: TradeJournalEntryWithRules[];
+};
+
+export type TrendEventWithRule = TrendEvent & {
+    rule: Rule | null;
 };
 
 // Updated to only include success and failure
@@ -59,3 +70,18 @@ export interface RulePerformance {
     status: StatusType;
     notes: string;
 }
+
+export type TrendEventType = "successful_reversal" | "failed_reversal";
+
+export type TrendDirection = "uptrend" | "downtrend";
+
+export type TimeframeType =
+    | "1m"
+    | "5m"
+    | "15m"
+    | "30m"
+    | "1h"
+    | "4h"
+    | "Daily"
+    | "Weekly"
+    | "Monthly";

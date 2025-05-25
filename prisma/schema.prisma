@@ -22,6 +22,7 @@ model Rule {
   tradeJournalEntries TradeJournalEntry[] // Relation to trade journal entries
   historyEvents RuleHistoryEvent[] // Relation to history events
   versions     RuleVersion[]
+  trendEvents  TrendEvent[] // Relation to trend events
 }
 
 model RuleVersion {
@@ -91,7 +92,6 @@ model TradeJournalEntry {
   dailyJournalId  String?
 }
 
-
 model DailyJournal {
   id                String   @id @default(cuid())
   date              String   @unique
@@ -112,4 +112,19 @@ model DailyJournal {
   
   // Relations
   trades            TradeJournalEntry[] // Trades made on this day
+}
+
+model TrendEvent {
+  id          String   @id @default(cuid())
+  date        DateTime
+  eventType   String   // "successful_reversal" or "failed_reversal"
+  description String
+  symbol      String
+  direction   String?  // "uptrend" or "downtrend" - the direction after the reversal
+  timeframe   String?  // e.g., "1h", "4h", "Daily"
+  screenshot  String?  // URL to screenshot or chart image
+  ruleId      String?
+  rule        Rule?    @relation(fields: [ruleId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

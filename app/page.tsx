@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, LineChart } from "lucide-react";
+import { ArrowRight, BookOpen, LineChart, TrendingUp } from "lucide-react";
 
 export default function Home() {
     return (
@@ -30,6 +30,12 @@ export default function Home() {
                         <Button asChild variant="outline">
                             <Link href="/rules">
                                 Rules <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline">
+                            <Link href="/trend-analysis">
+                                <TrendingUp className="mr-2 h-4 w-4" />
+                                Trend Analysis
                             </Link>
                         </Button>
                     </div>
