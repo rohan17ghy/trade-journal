@@ -17,6 +17,7 @@ import {
     TrendingUp,
     TrendingDown,
     XCircle,
+    Clock,
 } from "lucide-react";
 import { format, addMonths, subMonths } from "date-fns";
 import { getTrendEventsAction } from "./actions";
@@ -69,7 +70,24 @@ const FailedBearishIcon = ({ size = "small" }) => {
 // Helper function to sort events chronologically
 const sortEventsChronologically = (events: TrendEventWithRule[]) => {
     return [...events].sort((a, b) => {
-        // First try to sort by createdAt if available
+        // First try to sort by date
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+
+        if (dateA !== dateB) {
+            return dateA - dateB;
+        }
+
+        // If dates are the same, sort by time if available
+        if (a.time && b.time) {
+            return a.time.localeCompare(b.time);
+        }
+
+        // If only one has time, put the one with time first
+        if (a.time) return -1;
+        if (b.time) return 1;
+
+        // If neither has time, try createdAt
         if (a.createdAt && b.createdAt) {
             return (
                 new Date(a.createdAt).getTime() -
@@ -77,8 +95,7 @@ const sortEventsChronologically = (events: TrendEventWithRule[]) => {
             );
         }
 
-        // Then try to sort by ID (assuming higher IDs are more recent)
-        // Convert string IDs to numbers if possible
+        // Fallback to ID comparison
         const idA = typeof a.id === "string" ? Number.parseInt(a.id, 10) : a.id;
         const idB = typeof b.id === "string" ? Number.parseInt(b.id, 10) : b.id;
 
@@ -592,7 +609,8 @@ export function TrendCalendar() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium text-sm">
-                                                        {DEFAULT_INSTRUMENT}
+                                                        {event.title ||
+                                                            DEFAULT_INSTRUMENT}
                                                     </span>
                                                     <Badge
                                                         variant={
@@ -617,6 +635,14 @@ export function TrendCalendar() {
                                                         </Badge>
                                                     )}
                                                 </div>
+                                                {event.time && (
+                                                    <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                                        <Clock className="h-3 w-3 mr-1" />
+                                                        <span>
+                                                            {event.time}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <p className="text-xs text-muted-foreground mt-1">
                                                     {event.description}
                                                 </p>

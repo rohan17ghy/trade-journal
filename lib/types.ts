@@ -55,6 +55,8 @@ export type TrendEventType = "successful_reversal" | "failed_reversal";
 export interface TrendEvent {
     id: string;
     date: Date;
+    time?: string | null; // Time at which reversal or failed reversal happened
+    title?: string | null; // Title for the trend event
     eventType: string;
     description: string;
     symbol: string;

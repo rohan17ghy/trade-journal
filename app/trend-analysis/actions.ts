@@ -9,9 +9,14 @@ export async function getTrendEventsAction(): Promise<
 > {
     try {
         const trendEvents = await prisma.trendEvent.findMany({
-            orderBy: {
-                date: "desc",
-            },
+            orderBy: [
+                {
+                    date: "desc",
+                },
+                {
+                    time: "desc",
+                },
+            ],
             include: {
                 rule: true,
             },
@@ -46,9 +51,14 @@ export async function getTrendEventsByMonthAction(
                     lte: endDate,
                 },
             },
-            orderBy: {
-                date: "asc",
-            },
+            orderBy: [
+                {
+                    date: "asc",
+                },
+                {
+                    time: "asc",
+                },
+            ],
             include: {
                 rule: true,
             },
@@ -72,6 +82,8 @@ export async function createTrendEventAction(
 ): Promise<ActionResult> {
     try {
         const date = new Date(formData.get("date") as string);
+        const title = formData.get("title") as string;
+        const time = formData.get("time") as string;
         const eventType = formData.get("eventType") as string;
         const description = formData.get("description") as string;
         const symbol = formData.get("symbol") as string;
@@ -90,11 +102,13 @@ export async function createTrendEventAction(
         await prisma.trendEvent.create({
             data: {
                 date,
+                title,
+                time,
                 eventType,
                 description,
                 symbol,
                 direction,
-                ruleId,
+                ruleId: ruleId === "none" ? null : ruleId,
             },
         });
 

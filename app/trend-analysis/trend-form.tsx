@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTrendEventAction, getRulesAction } from "./actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,7 +23,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Rule } from "@prisma/client";
 import type { TrendDirection, TrendEventType } from "@/lib/types";
@@ -32,6 +33,8 @@ const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default inst
 export function TrendEventForm() {
     const router = useRouter();
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const [title, setTitle] = useState("");
+    const [time, setTime] = useState("");
     const [eventType, setEventType] = useState<TrendEventType>(
         "successful_reversal"
     );
@@ -41,6 +44,14 @@ export function TrendEventForm() {
     const [rules, setRules] = useState<Rule[]>([]);
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Set default time to current time when component mounts
+    useEffect(() => {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        setTime(`${hours}:${minutes}`);
+    }, []);
 
     useEffect(() => {
         async function loadRules() {
@@ -70,6 +81,8 @@ export function TrendEventForm() {
         try {
             const formData = new FormData();
             formData.append("date", date.toISOString());
+            formData.append("title", title);
+            formData.append("time", time);
             formData.append("eventType", eventType);
             formData.append("description", description);
             formData.append("symbol", DEFAULT_INSTRUMENT);
@@ -80,6 +93,8 @@ export function TrendEventForm() {
             if (result.success) {
                 // Reset form
                 setDate(new Date());
+                setTitle("");
+                // Don't reset time - keep the current time
                 setEventType("successful_reversal");
                 setDescription("");
                 setDirection("");
@@ -99,6 +114,16 @@ export function TrendEventForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                            id="title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Enter a title for this trend event"
+                        />
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="date">Date</Label>
                         <Popover>
@@ -127,6 +152,20 @@ export function TrendEventForm() {
                                 />
                             </PopoverContent>
                         </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="time">Time</Label>
+                        <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="time"
+                                type="time"
+                                value={time}
+                                onChange={(e) => setTime(e.target.value)}
+                                className="flex-1"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -192,19 +231,19 @@ export function TrendEventForm() {
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
-            </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the trend event, what happened, and why it's significant..."
-                    rows={4}
-                    required
-                />
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Describe the trend event, what happened, and why it's significant..."
+                            rows={4}
+                            required
+                        />
+                    </div>
+                </div>
             </div>
 
             <Button type="submit" disabled={isSubmitting}>

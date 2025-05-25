@@ -216,6 +216,21 @@ export function TrendTimeline() {
         }
     });
 
+    // Sort events within each date by time
+    Object.keys(groupedEvents).forEach((date) => {
+        groupedEvents[date].sort((a, b) => {
+            // If both have time, sort by time
+            if (a.time && b.time) {
+                return a.time.localeCompare(b.time);
+            }
+            // If only one has time, put the one with time first
+            if (a.time) return -1;
+            if (b.time) return 1;
+            // If neither has time, keep original order
+            return 0;
+        });
+    });
+
     // Get unique rules for filter
     const uniqueRules = events
         .filter((e) => e.rule)
@@ -492,7 +507,9 @@ export function TrendTimeline() {
                                                         <XCircle className="h-5 w-5 text-red-500" />
                                                     )}
                                                     <span className="font-medium">
-                                                        Trend Reversal
+                                                        {event.title
+                                                            ? event.title
+                                                            : "Trend Reversal"}
                                                     </span>
                                                     <Badge
                                                         variant="outline"
@@ -538,19 +555,14 @@ export function TrendTimeline() {
                                                             return "Invalid date";
                                                         }
                                                     })()}
-                                                    <Clock className="h-3 w-3 ml-2" />
-                                                    {(() => {
-                                                        try {
-                                                            return format(
-                                                                new Date(
-                                                                    event.date
-                                                                ),
-                                                                "p"
-                                                            );
-                                                        } catch (e) {
-                                                            return "Invalid time";
-                                                        }
-                                                    })()}
+                                                    {event.time && (
+                                                        <>
+                                                            <Clock className="h-3 w-3 ml-2" />
+                                                            <span>
+                                                                {event.time}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </div>
 
                                                 <CollapsibleContent>
