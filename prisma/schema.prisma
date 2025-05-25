@@ -121,8 +121,6 @@ model TrendEvent {
   description String
   symbol      String
   direction   String?  // "uptrend" or "downtrend" - the direction after the reversal
-  timeframe   String?  // e.g., "1h", "4h", "Daily"
-  screenshot  String?  // URL to screenshot or chart image
   ruleId      String?
   rule        Rule?    @relation(fields: [ruleId], references: [id])
   createdAt   DateTime @default(now())

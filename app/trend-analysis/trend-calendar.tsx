@@ -23,9 +23,9 @@ import { getTrendEventsAction } from "./actions";
 import type { TrendEventWithRule } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import type { DayContent } from "react-day-picker";
+import type { DayContentProps } from "react-day-picker";
 
-const INSTRUMENT = process.env.INSTRUMENT || "NIFTY50"; // Replace with your preferred default instrument
+const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
 // Custom failed reversal icons with stop sign in bottom right
 const FailedBullishIcon = ({ size = "small" }) => {
@@ -401,7 +401,7 @@ export function TrendCalendar() {
     };
 
     // Custom day content renderer
-    function CustomDayContent(props: /*DayContent*/ any) {
+    function CustomDayContent(props: DayContentProps) {
         const dateStr = props.date.toISOString().split("T")[0];
         const dayEvents = eventsByDate[dateStr] || [];
         const backgroundStyle = getDayBackgroundStyle(props.date);
@@ -450,7 +450,7 @@ export function TrendCalendar() {
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                     <CardTitle className="text-xl font-bold">
-                        {INSTRUMENT} - {format(date, "MMMM yyyy")}
+                        {DEFAULT_INSTRUMENT} - {format(date, "MMMM yyyy")}
                     </CardTitle>
                     <div className="flex gap-1">
                         <Button
@@ -592,7 +592,7 @@ export function TrendCalendar() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium text-sm">
-                                                        {INSTRUMENT}
+                                                        {DEFAULT_INSTRUMENT}
                                                     </span>
                                                     <Badge
                                                         variant={
@@ -627,12 +627,6 @@ export function TrendCalendar() {
                                                         "uptrend"
                                                             ? "Bullish"
                                                             : "Bearish"}
-                                                    </p>
-                                                )}
-                                                {event.timeframe && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Timeframe:{" "}
-                                                        {event.timeframe}
                                                     </p>
                                                 )}
                                             </div>

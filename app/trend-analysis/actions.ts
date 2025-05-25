@@ -76,8 +76,6 @@ export async function createTrendEventAction(
         const description = formData.get("description") as string;
         const symbol = formData.get("symbol") as string;
         const direction = (formData.get("direction") as string) || null;
-        const timeframe = (formData.get("timeframe") as string) || null;
-        const screenshot = (formData.get("screenshot") as string) || null;
         const ruleId = (formData.get("ruleId") as string) || null;
 
         // Validate required fields
@@ -96,8 +94,6 @@ export async function createTrendEventAction(
                 description,
                 symbol,
                 direction,
-                timeframe,
-                screenshot,
                 ruleId,
             },
         });

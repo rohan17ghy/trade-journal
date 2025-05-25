@@ -15,7 +15,6 @@ import {
     TrendingUp,
     TrendingDown,
     Trash2,
-    ExternalLink,
     ChevronDown,
     ChevronRight,
     Calendar,
@@ -65,7 +64,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 
-const INSTRUMENT = process.env.INSTRUMENT || "NIFTY50"; // Replace with your preferred default instrument
+const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
 type DateRangeType = "all" | "this-week" | "this-month" | "custom";
 
@@ -458,7 +457,7 @@ export function TrendTimeline() {
                     <Card key={date}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">
-                                {INSTRUMENT} -{" "}
+                                {DEFAULT_INSTRUMENT} -{" "}
                                 {new Date(date).toLocaleDateString("en-US", {
                                     weekday: "long",
                                     year: "numeric",
@@ -509,11 +508,6 @@ export function TrendTimeline() {
                                                             ? "Successful"
                                                             : "Failed"}
                                                     </Badge>
-                                                    {event.timeframe && (
-                                                        <Badge variant="outline">
-                                                            {event.timeframe}
-                                                        </Badge>
-                                                    )}
                                                     <CollapsibleTrigger asChild>
                                                         <Button
                                                             variant="ghost"
@@ -610,23 +604,6 @@ export function TrendTimeline() {
                                                                         "No Category"}
                                                                     )
                                                                 </span>
-                                                            </div>
-                                                        )}
-
-                                                        {event.screenshot && (
-                                                            <div className="text-sm">
-                                                                <a
-                                                                    href={
-                                                                        event.screenshot
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-blue-600 hover:underline flex items-center"
-                                                                >
-                                                                    <ExternalLink className="h-4 w-4 mr-1" />
-                                                                    View Chart
-                                                                    Screenshot
-                                                                </a>
                                                             </div>
                                                         )}
 

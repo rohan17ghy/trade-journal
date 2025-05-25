@@ -1,7 +1,5 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-
 import type React from "react";
 
 import { useState, useEffect } from "react";
@@ -27,13 +25,9 @@ import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Rule } from "@prisma/client";
-import type {
-    TimeframeType,
-    TrendDirection,
-    TrendEventType,
-} from "@/lib/types";
+import type { TrendDirection, TrendEventType } from "@/lib/types";
 
-const INSTRUMENT = process.env.INSTRUMENT || "NIFTY50"; // Replace with your preferred default instrument
+const DEFAULT_INSTRUMENT = "EURUSD"; // Replace with your preferred default instrument
 
 export function TrendEventForm() {
     const router = useRouter();
@@ -43,8 +37,6 @@ export function TrendEventForm() {
     );
     const [description, setDescription] = useState("");
     const [direction, setDirection] = useState<TrendDirection | "">("");
-    const [timeframe, setTimeframe] = useState<TimeframeType | "">("");
-    const [screenshot, setScreenshot] = useState("");
     const [ruleId, setRuleId] = useState("");
     const [rules, setRules] = useState<Rule[]>([]);
     const [loading, setLoading] = useState(false);
@@ -80,10 +72,8 @@ export function TrendEventForm() {
             formData.append("date", date.toISOString());
             formData.append("eventType", eventType);
             formData.append("description", description);
-            formData.append("symbol", INSTRUMENT);
+            formData.append("symbol", DEFAULT_INSTRUMENT);
             if (direction) formData.append("direction", direction);
-            if (timeframe) formData.append("timeframe", timeframe);
-            if (screenshot) formData.append("screenshot", screenshot);
             if (ruleId) formData.append("ruleId", ruleId);
 
             const result = await createTrendEventAction(formData);
@@ -93,8 +83,6 @@ export function TrendEventForm() {
                 setEventType("successful_reversal");
                 setDescription("");
                 setDirection("");
-                setTimeframe("");
-                setScreenshot("");
                 setRuleId("");
 
                 // Refresh the page
@@ -162,7 +150,9 @@ export function TrendEventForm() {
                             </SelectContent>
                         </Select>
                     </div>
+                </div>
 
+                <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="direction">
                             Direction After Reversal (Optional)
@@ -184,46 +174,6 @@ export function TrendEventForm() {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="timeframe">Timeframe (Optional)</Label>
-                        <Select
-                            value={timeframe}
-                            onValueChange={(value) =>
-                                setTimeframe(value as TimeframeType)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select timeframe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                <SelectItem value="1m">1 Minute</SelectItem>
-                                <SelectItem value="5m">5 Minutes</SelectItem>
-                                <SelectItem value="15m">15 Minutes</SelectItem>
-                                <SelectItem value="30m">30 Minutes</SelectItem>
-                                <SelectItem value="1h">1 Hour</SelectItem>
-                                <SelectItem value="4h">4 Hours</SelectItem>
-                                <SelectItem value="Daily">Daily</SelectItem>
-                                <SelectItem value="Weekly">Weekly</SelectItem>
-                                <SelectItem value="Monthly">Monthly</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="screenshot">
-                            Screenshot URL (Optional)
-                        </Label>
-                        <Input
-                            id="screenshot"
-                            value={screenshot}
-                            onChange={(e) => setScreenshot(e.target.value)}
-                            placeholder="URL to chart screenshot"
-                        />
                     </div>
 
                     <div className="space-y-2">
